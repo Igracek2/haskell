@@ -1,0 +1,38 @@
+inRange :: Maze -> (Int,Int) -> Bool
+inRange maze (r,c) =
+  r >= 0 && c >= 0 && r < length maze && c < length (head maze)
+
+replaceCharInRow :: String -> Int -> Char -> String
+replaceCharInRow row col ch = take col row ++ [ch] ++ drop (col+1) row
+
+putCharInMaze :: Maze -> (Int,Int) -> Char -> Maze
+putCharInMaze maze (r,c) ch =
+  take r maze ++ [replaceCharInRow (maze !! r) c ch] ++ drop (r+1) maze
+
+neighbors :: (Int,Int) -> [(Int,Int)]
+neighbors (r,c) = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+
+bfsDistances :: Maze -> (Int,Int) -> [((Int,Int), Int)]
+bfsDistances maze start =
+  let
+    go queue visited acc =
+      case S.viewl queue of
+        S.EmptyL -> acc
+        ((pos,dist) S.:< rest) ->
+          let ns = [n | n <- neighbors pos, inRange maze n, getFromMaze maze n == ' ', not (n `Set.member` visited)]
+              visited' = foldr Set.insert visited ns
+              rest' = foldl' (\q x -> q S.|> (x,dist+1)) rest ns
+              acc' = ((pos,dist):acc)
+          in go rest' visited' acc'
+  in go (S.singleton (start,0)) (Set.singleton start) []
+
+solveAll :: Maze -> (Int,Int) -> Maze
+solveAll maze start =
+  let distPairs = bfsDistances maze start
+      fill m [] = m
+      fill m (((r,c),d):xs) =
+        let ch = intToDigit (d `mod` 10)
+            m' = putCharInMaze m (r,c) ch
+        in fill m' xs
+      m2 = fill maze distPairs
+  in putCharInMaze m2 start '0'
