@@ -1,0 +1,29 @@
+inRange :: Maze -> (Int,Int) -> Bool
+inRange maze (r,c) =
+  r >= 0 && c >= 0 && r < length maze && c < length (head maze)
+
+countMinesAround :: Maze -> (Int,Int) -> Int
+countMinesAround maze (r,c) =
+  length
+    [ (nr,nc)
+    | nr <- [r-1 .. r+1]
+    , nc <- [c-1 .. c+1]
+    , (nr,nc) /= (r,c)
+    , inRange maze (nr,nc)
+    , getFromMaze maze (nr,nc) == '*'
+    ]
+
+replaceChar :: Maze -> (Int,Int) -> Char
+replaceChar maze (r,c) =
+  let ch = getFromMaze maze (r,c)
+  in case ch of
+       ' ' -> intToDigit (countMinesAround maze (r,c))
+       _   -> ch
+
+minesInMaze :: Maze -> Maze
+minesInMaze old =
+  [ [ replaceChar old (r,c)
+    | c <- [0..length (head old)-1]
+    ]
+  | r <- [0..length old-1]
+  ]
