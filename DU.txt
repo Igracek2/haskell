@@ -1,103 +1,179 @@
-module MazeTasksBezKomentare where
+module SimpleMaze where
 
-import Data.List
-import Data.Maybe
-import qualified Data.Sequence as S
-import qualified Data.Set as Set
-
+-------------------------
+-- TYPE AND PRINT
+-------------------------
 type Maze = [String]
 
 printMaze :: Maze -> IO ()
-printMaze x = putStr (unlines x)
+printMaze x = putStr (concat (map (++"\n") x))
 
+sample4 :: Maze
+sample4 = ["*********",
+           "*s*   *e*",
+           "* *   * *",
+           "* *   * *",
+           "*       *",
+           "******* *",
+           "        *",
+           "*********"]
+
+-------------------------
+-- 1) ABOVE
+-------------------------
 above :: Maze -> Maze -> Maze
 above m1 m2 = m1 ++ m2
 
+-------------------------
+-- 2) SIDE BY SIDE
+-------------------------
 sideBySide :: Maze -> Maze -> Maze
-sideBySide m1 m2 = zipWith (++) m1 m2
+sideBySide []         []         = []
+sideBySide (row1:xs1) (row2:xs2) = (row1 ++ row2) : sideBySide xs1 xs2
+sideBySide x          []         = x
+sideBySide []         y          = y
+
+-------------------------
+-- 3) ROTATIONS
+-------------------------
+take' :: Int -> [a] -> [a]
+take' 0 _      = []
+take' _ []     = []
+take' n (x:xs) = x : take' (n-1) xs
+
+drop' :: Int -> [a] -> [a]
+drop' 0 xs     = xs
+drop' _ []     = []
+drop' n (_:xs) = drop' (n-1) xs
+
+transpose :: Maze -> Maze
+transpose []     = []
+transpose ([]:_) = []
+transpose rows   =
+  let heads = map head rows
+      tails = map tail rows
+  in heads : transpose tails
 
 rotateR :: Maze -> Maze
-rotateR [] = []
-rotateR maze =
-  let rows = length maze
-      cols = length (head maze)
-  in [ [ maze !! (rows - 1 - r) !! c | r <- [0..rows-1] ]
-       | c <- [0..cols-1] ]
+rotateR m = transpose (reverse m)
 
 rotateL :: Maze -> Maze
-rotateL [] = []
-rotateL maze =
-  let rows = length maze
-      cols = length (head maze)
-  in [ [ maze !! r !! (cols - 1 - c) | r <- [0..rows-1] ]
-       | c <- [0..cols-1] ]
+rotateL m = reverse (transpose m)
 
+-------------------------
+-- 4) GET FROM MAZE
+-------------------------
 getFromMaze :: Maze -> (Int, Int) -> Char
 getFromMaze maze (r, c) = (maze !! r) !! c
 
+-------------------------
+-- 5) PUT INTO MAZE
+-------------------------
+replaceChar :: String -> Int -> Char -> String
+replaceChar []     _ _  = []
+replaceChar (x:xs) 0 ch = ch : xs
+replaceChar (x:xs) n ch = x : replaceChar xs (n-1) ch
+
 putIntoMaze :: Maze -> [(Int, Int, Char)] -> Maze
 putIntoMaze maze [] = maze
-putIntoMaze maze ((r,c,ch):xs) =
-  let replaceAt i v ls = take i ls ++ [v] ++ drop (i+1) ls
-      oldRow = maze !! r
-      newRow = replaceAt c ch oldRow
-      newMaze = replaceAt r newRow maze
-  in putIntoMaze newMaze xs
+putIntoMaze maze ((row, col, ch):rest) =
+    let newMaze = putOne maze row col ch
+    in putIntoMaze newMaze rest
 
+putOne :: Maze -> Int -> Int -> Char -> Maze
+putOne (r:rs) 0 col ch = replaceChar r col ch : rs
+putOne (r:rs) n col ch = r : putOne rs (n-1) col ch
+putOne []     _ _   _  = []
+
+-------------------------
+-- 6) GET PART
+-------------------------
 getPart :: Maze -> (Int, Int) -> (Int, Int) -> Maze
-getPart maze (startRow, startCol) (h, w) =
-  let neededRows = take h (drop startRow maze)
-  in map (take w . drop startCol) neededRows
+getPart maze (startR, startC) (h, w) =
+  let slicedRows = take' h (drop' startR maze)
+  in map (\row -> take' w (drop' startC row)) slicedRows
 
+-------------------------
+-- 7) SOLVE MAZE (BFS)
+-------------------------
 solveMaze :: Maze -> Int
 solveMaze maze =
-  let (sr, sc) = findChar 's' maze
-      (er, ec) = findChar 'e' maze
-  in bfsDistance maze (sr, sc) (er, ec)
+  let sPos    = findStart maze
+      initial = [(fst sPos, snd sPos, 0)] -- (r, c, distance=0)
+  in bfs maze initial [(fst sPos, snd sPos)]  -- visited
 
-findChar :: Char -> Maze -> (Int, Int)
-findChar ch maze =
-  let rows = length maze
-      cols = length (head maze)
-      coords = [ (r,c) | r <- [0..rows-1], c <- [0..cols-1], getFromMaze maze (r,c) == ch ]
-  in case coords of
-       []    -> error ("Znak " ++ [ch] ++ " nebyl nalezen!")
-       (x:_) -> x
+findStart :: Maze -> (Int, Int)
+findStart maze = findHelper maze 0
+  where
+    findHelper []     _    = error "No 's' in maze!"
+    findHelper (r:rs) row =
+      case elemIndex 's' r of
+        Just col -> (row, col)
+        Nothing  -> findHelper rs (row+1)
 
-bfsDistance :: Maze -> (Int,Int) -> (Int,Int) -> Int
-bfsDistance maze (sr,sc) (er,ec) =
-  let neighbors (r,c) = [(r-1,c), (r+1,c), (r,c-1), (r,c+1)]
-      inRange (r,c) = r >= 0 && c >= 0 && r < length maze && c < length (head maze)
-      isFree (r,c) = getFromMaze maze (r,c) /= '*'
-      queueInit = S.singleton (sr,sc,0)
-      visitedInit = Set.singleton (sr,sc)
-      bfsLoop queue visited =
-        case S.viewl queue of
-          S.EmptyL -> error "Cesta nenalezena!"
-          (r,c,d) S.:< rest ->
-            if (r,c) == (er,ec)
-               then d
-               else
-                 let nbrs = [ (nr, nc)
-                            | (nr,nc) <- neighbors (r,c)
-                            , inRange (nr,nc)
-                            , isFree (nr,nc)
-                            , not ((nr,nc) `Set.member` visited)
-                            ]
-                     visited' = foldr Set.insert visited nbrs
-                     rest' = foldl' (\acc (nr,nc) -> acc S.|> (nr,nc,d+1)) rest nbrs
-                 in bfsLoop rest' visited'
-  in bfsLoop queueInit visitedInit
+elemIndex :: Char -> String -> Maybe Int
+elemIndex _ []     = Nothing
+elemIndex ch (x:xs)
+  | ch == x  = Just 0
+  | otherwise = case elemIndex ch xs of
+      Just i  -> Just (i+1)
+      Nothing -> Nothing
 
-sample4 :: Maze
-sample4 =
-  [ "*********"
-  , "*s*   *e*"
-  , "* *   * *"
-  , "* *   * *"
-  , "*       *"
-  , "******* *"
-  , "        *"
-  , "*********"
-  ]
+bfs :: Maze -> [(Int,Int,Int)] -> [(Int,Int)] -> Int
+bfs _    []                  _       = -1
+bfs maze ((r,c,d):rest) visited =
+  let ch = getFromMaze maze (r,c)
+  in if ch == 'e'
+     then d
+     else
+       let neighbors  = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+           validN     = filter (isValid maze visited) neighbors
+           newQueue   = rest ++ [(nr,nc,d+1) | (nr,nc) <- validN]
+           newVisited = visited ++ validN
+       in bfs maze newQueue newVisited
 
+isValid :: Maze -> [(Int,Int)] -> (Int,Int) -> Bool
+isValid maze visited (rr,cc) =
+    inRange rr (length maze) &&
+    inRange cc (length (head maze)) &&
+    notElem (rr,cc) visited &&
+    let ch = getFromMaze maze (rr,cc)
+    in ch /= '*'
+
+inRange :: Int -> Int -> Bool
+inRange i maxVal = (i >= 0) && (i < maxVal)
+
+
+main :: IO ()
+main = do
+    putStrLn "Original maze:"
+    printMaze sample4
+    
+    putStrLn "\nMaze above itself:"
+    printMaze (above sample4 sample4)
+    
+    putStrLn "\nMaze side by side with itself:"
+    printMaze (sideBySide sample4 sample4)
+    
+    putStrLn "\nMaze rotated to the right:"
+    printMaze (rotateR sample4)
+    
+    putStrLn "\nMaze rotated to the left:"
+    printMaze (rotateL sample4)
+    
+    putStrLn "\nCharacter at position (1,1):"
+    print $ getFromMaze sample4 (1,1)
+    
+    putStrLn "\nMaze after putting characters:"
+    let modifiedMaze = putIntoMaze sample4 [(0,0,'1'),(6,6,'2'),(0,6,'3')]
+    printMaze modifiedMaze
+    
+    putStrLn "\nPart of the maze from (1,1) with size (4,4):"
+    let partOfMaze = getPart sample4 (1,1) (4,4)
+    printMaze partOfMaze
+    
+    putStrLn "\nSolving the maze..."
+    let solution = solveMaze sample4
+    if solution /= -1
+        then putStrLn $ "Maze solved! Distance to exit: " ++ show solution
+        else putStrLn "No solution found for the maze!"
