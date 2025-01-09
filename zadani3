@@ -1,0 +1,36 @@
+move :: (Int, Int) -> (Char, Int) -> (Int, Int)
+move (r,c) (d,steps) =
+  case d of
+    'd' -> (r+steps, c)
+    'u' -> (r-steps, c)
+    'l' -> (r, c-steps)
+    'r' -> (r, c+steps)
+    _   -> (r,c)
+
+makeMiniMap :: Maze -> (Int,Int) -> Maze
+makeMiniMap maze (r,c) =
+  putIntoMaze (getPart maze (r-1,c-1) (3,3)) [(1,1,'.')]
+
+combineMiniMaps :: [Maze] -> Maze
+combineMiniMaps miniMaps =
+  let line = replicate 3 '='
+      wrapOne m = line : m ++ [line]
+  in concatMap wrapOne miniMaps
+
+collectPositions :: (Int,Int) -> [(Char,Int)] -> [(Int,Int)]
+collectPositions start moves =
+  let
+    go _ [] _ = []
+    go pd ((d,s):rs) pos =
+      let newPos = move pos (d,s)
+          changed = case pd of
+                      Nothing -> False
+                      Just x  -> x /= d
+          crosses = if changed then [pos] else []
+      in crosses ++ go (Just d) rs newPos
+    endPos = foldl move start moves
+  in start : go Nothing moves start ++ [endPos]
+
+minimaps :: Maze -> (Int, Int) -> [(Char, Int)] -> Maze
+minimaps maze start path =
+  combineMiniMaps (map (makeMiniMap maze) (collectPositions start path))
