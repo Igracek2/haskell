@@ -1,0 +1,42 @@
+inRange :: Maze -> (Int,Int) -> Bool
+inRange maze (r,c) =
+  r >= 0 && c >= 0 && r < length maze && c < length (head maze)
+
+replaceCharInRow :: String -> Int -> Char -> String
+replaceCharInRow row col ch = take col row ++ [ch] ++ drop (col+1) row
+
+putCharInMaze :: Maze -> (Int,Int) -> Char -> Maze
+putCharInMaze maze (r,c) ch =
+  take r maze ++ [replaceCharInRow (maze !! r) c ch] ++ drop (r+1) maze
+
+neighbors :: (Int,Int) -> [(Int,Int)]
+neighbors (r,c) = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+
+makePath :: Maze -> (Int,Int) -> (Int,Int) -> Maze
+makePath maze start end =
+  let
+    bfsPath =
+      let
+        go queue visited parents =
+          case S.viewl queue of
+            S.EmptyL -> []
+            (v S.:< vs) ->
+              if v == end
+                then reconstruct parents end
+                else
+                  let ns = [x | x <- neighbors v, inRange maze x, getFromMaze maze x == ' ', not (x `Set.member` visited)]
+                      visited' = foldr Set.insert visited ns
+                      vs' = foldl' (S.|>) vs ns
+                      newParents = [ (x,v) | x <- ns ]
+                  in go vs' visited' (newParents ++ parents)
+        reconstruct pm cur =
+          case lookup cur pm of
+            Nothing -> [cur]
+            Just p  -> reconstruct pm p ++ [cur]
+      in go (S.singleton start) (Set.singleton start) []
+    mark m [] _ = m
+    mark m (x:xs) n =
+      let ch = head (show n)
+          m' = putCharInMaze m x ch
+      in mark m' xs (n+1)
+  in mark maze bfsPath 1
