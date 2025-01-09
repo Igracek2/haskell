@@ -1,0 +1,30 @@
+inRange :: Maze -> (Int,Int) -> Bool
+inRange maze (r,c) =
+  r >= 0 && c >= 0 && r < length maze && c < length (head maze)
+
+replaceCharInRow :: String -> Int -> Char -> String
+replaceCharInRow row col ch = take col row ++ [ch] ++ drop (col+1) row
+
+putCharInMaze :: Maze -> (Int,Int) -> Char -> Maze
+putCharInMaze maze (r,c) ch =
+  take r maze ++ [replaceCharInRow (maze !! r) c ch] ++ drop (r+1) maze
+
+stepMove :: (Int,Int) -> Char -> (Int,Int)
+stepMove (r,c) d =
+  case d of
+    'u' -> (r-1, c)
+    'd' -> (r+1, c)
+    'l' -> (r, c-1)
+    'r' -> (r, c+1)
+    _   -> (r,c)
+
+markPath :: Maze -> (Int,Int) -> [Char] -> Maze
+markPath maze start path =
+  let
+    go m _ [] = m
+    go m pos (d:ds) =
+      let newPos = stepMove pos d
+          m2 = putCharInMaze m newPos '+'
+      in go m2 newPos ds
+    mStart = putCharInMaze maze start '+'
+  in go mStart start path
