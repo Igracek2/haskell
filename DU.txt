@@ -1,0 +1,103 @@
+module MazeTasksBezKomentare where
+
+import Data.List
+import Data.Maybe
+import qualified Data.Sequence as S
+import qualified Data.Set as Set
+
+type Maze = [String]
+
+printMaze :: Maze -> IO ()
+printMaze x = putStr (unlines x)
+
+above :: Maze -> Maze -> Maze
+above m1 m2 = m1 ++ m2
+
+sideBySide :: Maze -> Maze -> Maze
+sideBySide m1 m2 = zipWith (++) m1 m2
+
+rotateR :: Maze -> Maze
+rotateR [] = []
+rotateR maze =
+  let rows = length maze
+      cols = length (head maze)
+  in [ [ maze !! (rows - 1 - r) !! c | r <- [0..rows-1] ]
+       | c <- [0..cols-1] ]
+
+rotateL :: Maze -> Maze
+rotateL [] = []
+rotateL maze =
+  let rows = length maze
+      cols = length (head maze)
+  in [ [ maze !! r !! (cols - 1 - c) | r <- [0..rows-1] ]
+       | c <- [0..cols-1] ]
+
+getFromMaze :: Maze -> (Int, Int) -> Char
+getFromMaze maze (r, c) = (maze !! r) !! c
+
+putIntoMaze :: Maze -> [(Int, Int, Char)] -> Maze
+putIntoMaze maze [] = maze
+putIntoMaze maze ((r,c,ch):xs) =
+  let replaceAt i v ls = take i ls ++ [v] ++ drop (i+1) ls
+      oldRow = maze !! r
+      newRow = replaceAt c ch oldRow
+      newMaze = replaceAt r newRow maze
+  in putIntoMaze newMaze xs
+
+getPart :: Maze -> (Int, Int) -> (Int, Int) -> Maze
+getPart maze (startRow, startCol) (h, w) =
+  let neededRows = take h (drop startRow maze)
+  in map (take w . drop startCol) neededRows
+
+solveMaze :: Maze -> Int
+solveMaze maze =
+  let (sr, sc) = findChar 's' maze
+      (er, ec) = findChar 'e' maze
+  in bfsDistance maze (sr, sc) (er, ec)
+
+findChar :: Char -> Maze -> (Int, Int)
+findChar ch maze =
+  let rows = length maze
+      cols = length (head maze)
+      coords = [ (r,c) | r <- [0..rows-1], c <- [0..cols-1], getFromMaze maze (r,c) == ch ]
+  in case coords of
+       []    -> error ("Znak " ++ [ch] ++ " nebyl nalezen!")
+       (x:_) -> x
+
+bfsDistance :: Maze -> (Int,Int) -> (Int,Int) -> Int
+bfsDistance maze (sr,sc) (er,ec) =
+  let neighbors (r,c) = [(r-1,c), (r+1,c), (r,c-1), (r,c+1)]
+      inRange (r,c) = r >= 0 && c >= 0 && r < length maze && c < length (head maze)
+      isFree (r,c) = getFromMaze maze (r,c) /= '*'
+      queueInit = S.singleton (sr,sc,0)
+      visitedInit = Set.singleton (sr,sc)
+      bfsLoop queue visited =
+        case S.viewl queue of
+          S.EmptyL -> error "Cesta nenalezena!"
+          (r,c,d) S.:< rest ->
+            if (r,c) == (er,ec)
+               then d
+               else
+                 let nbrs = [ (nr, nc)
+                            | (nr,nc) <- neighbors (r,c)
+                            , inRange (nr,nc)
+                            , isFree (nr,nc)
+                            , not ((nr,nc) `Set.member` visited)
+                            ]
+                     visited' = foldr Set.insert visited nbrs
+                     rest' = foldl' (\acc (nr,nc) -> acc S.|> (nr,nc,d+1)) rest nbrs
+                 in bfsLoop rest' visited'
+  in bfsLoop queueInit visitedInit
+
+sample4 :: Maze
+sample4 =
+  [ "*********"
+  , "*s*   *e*"
+  , "* *   * *"
+  , "* *   * *"
+  , "*       *"
+  , "******* *"
+  , "        *"
+  , "*********"
+  ]
+
