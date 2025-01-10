@@ -94,13 +94,13 @@ getPart maze (startR, startC) (h, w) =
   in map (\row -> take' w (drop' startC row)) slicedRows
 
 -------------------------
--- 7) SOLVE MAZE (findWay) - původní varianta (vrací vzdálenost)
+-- 7) SOLVE MAZE (bfs) - původní varianta (vrací vzdálenost)
 -------------------------
 solveMaze :: Maze -> Int
 solveMaze maze =
   let sPos    = findStart maze
       initial = [(fst sPos, snd sPos, 0)] -- (r, c, distance=0)
-  in findWay maze initial [(fst sPos, snd sPos)]  -- visited
+  in bfs maze initial [(fst sPos, snd sPos)]  -- visited
 
 findStart :: Maze -> (Int, Int)
 findStart maze = findHelper maze 0
@@ -119,9 +119,9 @@ elemIndex ch (x:xs)
       Just i  -> Just (i+1)
       Nothing -> Nothing
 
-findWay :: Maze -> [(Int,Int,Int)] -> [(Int,Int)] -> Int
-findWay _    []                  _       = -1
-findWay maze ((r,c,d):rest) visited =
+bfs :: Maze -> [(Int,Int,Int)] -> [(Int,Int)] -> Int
+bfs _    []                  _       = -1
+bfs maze ((r,c,d):rest) visited =
   let ch = getFromMaze maze (r,c)
   in if ch == 'e'
      then d
@@ -130,7 +130,7 @@ findWay maze ((r,c,d):rest) visited =
            validN     = filter (isValid maze visited) neighbors
            newQueue   = rest ++ [(nr,nc,d+1) | (nr,nc) <- validN]
            newVisited = visited ++ validN
-       in findWay maze newQueue newVisited
+       in bfs maze newQueue newVisited
 
 isValid :: Maze -> [(Int,Int)] -> (Int,Int) -> Bool
 isValid maze visited (rr,cc) =
@@ -144,7 +144,7 @@ inRange :: Int -> Int -> Bool
 inRange i maxVal = (i >= 0) && (i < maxVal)
 
 -------------------------
--- 7b) NOVÁ varianta findWay, která vrací cestu ve formě [Char]
+-- 7b) NOVÁ varianta bfs, která vrací cestu ve formě [Char]
 -------------------------
 
 directions :: [(Char,(Int,Int))]
@@ -155,15 +155,15 @@ directions = [
     ('r',( 0, 1))
   ]
 
-findWayPath :: Maze -> [((Int,Int), [Char])] -> [(Int,Int)] -> Maybe [Char]
-findWayPath _    []               _       = Nothing
-findWayPath maze (((r,c),path):queue) visited =
+bfsPath :: Maze -> [((Int,Int), [Char])] -> [(Int,Int)] -> Maybe [Char]
+bfsPath _    []               _       = Nothing
+bfsPath maze (((r,c),path):queue) visited =
   let ch = getFromMaze maze (r,c)
   in if ch == 'e'
      -- Pokud jsme v cíli, vrátíme nashromážděnou cestu.
      then Just path
      else
-       -- Jinak rozšíříme findWay o sousedy.
+       -- Jinak rozšíříme bfs o sousedy.
        let nextSteps = concatMap
              (\(dir,(dr,dc)) ->
                 let nr = r + dr
@@ -174,12 +174,12 @@ findWayPath maze (((r,c),path):queue) visited =
              directions
            newVisited = visited ++ map fst nextSteps
            newQueue   = queue ++ nextSteps
-       in findWayPath maze newQueue newVisited
+       in bfsPath maze newQueue newVisited
 
 solveMazeWithPath :: Maze -> Maybe [Char]
 solveMazeWithPath maze =
   let sPos = findStart maze
-  in findWayPath maze [(sPos, [])] [sPos]
+  in bfsPath maze [(sPos, [])] [sPos]
 
 -------------------------
 -- 8) OZNAČENÍ NALEZENÉ CESTY V MAZE
