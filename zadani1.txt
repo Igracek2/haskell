@@ -146,9 +146,7 @@ inRange i maxVal = (i >= 0) && (i < maxVal)
 -------------------------
 -- 7b) NOVÁ varianta BFS, která vrací cestu ve formě [Char]
 -------------------------
--- Definujeme čtyři směry a příslušnou změnu řádku/sloupce.
--- Písmena 'u','d','l','r' pak slouží k rekonstrukci path.
--------------------------
+
 directions :: [(Char,(Int,Int))]
 directions = [
     ('u',(-1,0)),
@@ -157,7 +155,6 @@ directions = [
     ('r',( 0, 1))
   ]
 
--- BFS, která kromě fronty a visited ukládá i dosud ušlou cestu (path).
 bfsPath :: Maze -> [((Int,Int), [Char])] -> [(Int,Int)] -> Maybe [Char]
 bfsPath _    []               _       = Nothing
 bfsPath maze (((r,c),path):queue) visited =
@@ -179,7 +176,6 @@ bfsPath maze (((r,c),path):queue) visited =
            newQueue   = queue ++ nextSteps
        in bfsPath maze newQueue newVisited
 
--- Jednoduchý "wrapper": najde start 's' a zavolá bfsPath.
 solveMazeWithPath :: Maze -> Maybe [Char]
 solveMazeWithPath maze =
   let sPos = findStart maze
@@ -188,11 +184,7 @@ solveMazeWithPath maze =
 -------------------------
 -- 8) OZNAČENÍ NALEZENÉ CESTY V MAZE
 -------------------------
--- Níže je ukázka jedné z možných implementací:
---   - stepMove (r,c) 'u' = (r-1,c), atd.
---   - putCharInMaze aktualizuje 1 políčko v Maze
---   - markPath celou cestu vyznačí například znakem '+'
--------------------------
+
 replaceCharInRow :: String -> Int -> Char -> String
 replaceCharInRow row col ch = take col row ++ [ch] ++ drop (col+1) row
 
@@ -219,7 +211,6 @@ markPath maze start path =
       let newPos = stepMove pos d
           m2     = putCharInMaze m newPos '+'
       in go m2 newPos ds
-    -- Označíme start také pluskem (aby bylo jasně vidět, kde se začínalo).
     mStart = putCharInMaze maze start '+'
   in go mStart start path
 
