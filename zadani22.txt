@@ -34,3 +34,21 @@ putPathNumbers maze coords =
 
 
 
+
+
+
+   -- 7) Solve Maze (distance from 's' to 'e')
+    putStrLn "\nSolving the maze (sample4) for distance 's' -> 'e'..."
+    let solutionDist = solveMaze sample4
+    if solutionDist /= -1
+        then putStrLn $ "Maze solved! Distance to exit: " ++ show solutionDist
+        else putStrLn "No solution found for the maze!"
+
+    -- 8) makePath example (číslovaná cesta)
+    putStrLn "\nmakePath on sample1 from (1,1) to (4,5):"
+    let maze1WithPath = makePath sample1 (1,1) (4,5)
+    printMaze maze1WithPath
+
+    putStrLn "\nmakePath on sample2 from (4,1) to (1,4):"
+    let maze2WithPath = makePath sample2 (4,1) (1,4)
+    printMaze maze2WithPath
