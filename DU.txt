@@ -94,13 +94,13 @@ getPart maze (startR, startC) (h, w) =
   in map (\row -> take' w (drop' startC row)) slicedRows
 
 -------------------------
--- 7) SOLVE MAZE (BFS)
+-- 7) SOLVE MAZE (findWay)
 -------------------------
 solveMaze :: Maze -> Int
 solveMaze maze =
   let sPos    = findStart maze
       initial = [(fst sPos, snd sPos, 0)] -- (r, c, distance=0)
-  in bfs maze initial [(fst sPos, snd sPos)]  -- visited
+  in findWay maze initial [(fst sPos, snd sPos)]  -- visited
 
 findStart :: Maze -> (Int, Int)
 findStart maze = findHelper maze 0
@@ -119,9 +119,9 @@ elemIndex ch (x:xs)
       Just i  -> Just (i+1)
       Nothing -> Nothing
 
-bfs :: Maze -> [(Int,Int,Int)] -> [(Int,Int)] -> Int
-bfs _    []                  _       = -1
-bfs maze ((r,c,d):rest) visited =
+findWay :: Maze -> [(Int,Int,Int)] -> [(Int,Int)] -> Int
+findWay _    []                  _       = -1
+findWay maze ((r,c,d):rest) visited =
   let ch = getFromMaze maze (r,c)
   in if ch == 'e'
      then d
@@ -130,7 +130,7 @@ bfs maze ((r,c,d):rest) visited =
            validN     = filter (isValid maze visited) neighbors
            newQueue   = rest ++ [(nr,nc,d+1) | (nr,nc) <- validN]
            newVisited = visited ++ validN
-       in bfs maze newQueue newVisited
+       in findWay maze newQueue newVisited
 
 isValid :: Maze -> [(Int,Int)] -> (Int,Int) -> Bool
 isValid maze visited (rr,cc) =
