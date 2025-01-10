@@ -1,0 +1,46 @@
+move :: (Int, Int) -> (Char, Int) -> (Int, Int)
+move (r,c) (d,steps) =
+  case d of
+    'd' -> (r + steps, c)
+    'u' -> (r - steps, c)
+    'l' -> (r, c - steps)
+    'r' -> (r, c + steps)
+    _   -> (r,c)
+
+collectPositions :: (Int,Int) -> [(Char,Int)] -> [(Int,Int)]
+collectPositions start moves =
+  let
+    go _ [] _ = []
+    go prevDir ((d,s):rs) currentPos =
+      let newPos   = move currentPos (d,s)
+          changed  = case prevDir of
+                       Nothing  -> False
+                       Just dir -> dir /= d
+          crosses  = if changed then [currentPos] else []
+      in crosses ++ go (Just d) rs newPos
+    endPos = foldl move start moves
+  in start : go Nothing moves start ++ [endPos]
+
+makeMiniMap :: Maze -> (Int,Int) -> Maze
+makeMiniMap maze (r,c) =
+  let small3x3 = getPart maze (r-1,c-1) (3,3)
+  in putIntoMaze small3x3 [(1,1,'.')]
+
+combineMiniMaps :: [Maze] -> Maze
+combineMiniMaps miniMaps =
+  let line = replicate 3 '='
+      wrapOne m = line : m ++ [line]
+  in concatMap wrapOne miniMaps
+
+minimaps :: Maze -> (Int, Int) -> [(Char, Int)] -> Maze
+minimaps maze start path =
+  let positions = collectPositions start path
+      all3x3    = map (makeMiniMap maze) positions
+  in combineMiniMaps all3x3
+
+let myPath = [('d',2), ('r',2), ('u',1), ('r',2), ('d',1), ('r',2)]
+
+putStrLn "\nGenerování minimaps z cesty (myPath):"
+let startPos = (1,1)
+let miniResult = minimaps sample4 startPos myPath
+printMaze miniResult
