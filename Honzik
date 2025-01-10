@@ -1,0 +1,1187 @@
+factorial :: Int -> Int
+*Main> factorial 5
+120
+factorial  :: Int -> Int
+factorial  0 = 1
+factorial  n = n * factorial  (n-1)
+
+factorial'  :: Int -> Int
+factorial' n | n==0 = 1
+             | otherwise = n * factorial'' (n-1)
+
+factorial''  :: Int -> Int        
+factorial'' n = if n==0 then 1 else n * factorial'' (n-1)
+
+fib :: Int -> Int
+*Main> fib 5      
+8
+fib :: Int->Int
+fib 0 = 1
+fib 1 = 1
+fib n = fib (n-1) + fib (n-2)
+
+fib' :: Int -> Int
+fib' n = tmp n 1 1 where
+  tmp 0 a _ = a 
+  tmp x a b = tmp (x-1) b (a+b)
+
+leapYear :: Int -> Bool
+*Main> leapYear 2000
+True
+*Main> leapYear 2020
+True
+*Main> leapYear 2100
+False
+*Main> leapYear 2019
+False
+leapYear :: Int -> Bool
+leapYear x = x mod 4 == 0 && x mod 100 /= 0 || x mod 400 == 0
+
+leapYear' :: Int -> Bool
+leapYear' x | x mod 400 == 0 = True
+            | x mod 100 == 0 = False
+            | otherwise = x mod 4 == 0
+
+
+
+max2 :: Int -> Int -> Int
+max3 :: Int -> Int -> Int -> Int
+*Main> max2 5 8
+8
+*Main> max3 5 8 4
+8
+max2 :: Int -> Int -> Int
+max2 x y | x >= y = x
+         |otherwise = y
+
+max3 :: Int -> Int -> Int -> Int
+max3 x y z = (x max2 y) max2 z
+
+
+combinations :: Int -> Int -> Int
+*Main> combinations 8 5
+56
+factorial  :: Int -> Int
+factorial  0 = 1
+factorial  n = n * factorial  (n-1)
+
+combinations :: Int -> Int -> Int
+combinations n k = factorial n div (factorial k * factorial (n-k))
+
+combinations' :: Int -> Int -> Int
+combinations' n k = fromIntegral(factorial n) div fromIntegral(factorial k * factorial (n-k))
+
+
+
+Implementujte funkci, která spočítá počet řešení kvadratické rovnice. Tato kvadratická rovnice je zadaná standardními koeficienty: a,b,c.
+numberOfRoots :: Int -> Int -> Int -> Int
+-- To simplify the solution, let construct can be used
+f x y = let a = x + y
+        in a * a
+*Main> numberOfRoots 1 4 2
+2
+numberOfRoots :: Int -> Int -> Int -> Int
+numberOfRoots a b c = let d = b*b - 4 * a *c
+                      in if d<0 then 0 else if d == 0 then 1 else 2
+
+
+
+Implementujte funkci, která spočítá nejvetší společný dělitel pro dvě zadaná čísla. Video logo.png
+gcd' :: Int -> Int -> Int
+*Main> gcd' 30 18
+6
+gcd' :: Int -> Int -> Int
+gcd' a b | a > b = gcd' (a-b) b
+         | a < b = gcd' a (b-a)
+         | a==b = a
+
+gcd2 :: Int -> Int -> Int         
+gcd2 a 0 = a
+gcd2 a b = gcd2 b (a mod b)
+
+
+
+Implementujte funkci, která určí, zda je zadané číslo prvočíslo. Video logo.png
+isPrime :: Int -> Bool
+*Main> isPrime 7
+True
+isPrime :: Int -> Bool
+isPrime 1 = False
+isPrime y = isPrimeTest y (y-1) where
+  isPrimeTest _ 1 = True 
+  isPrimeTest n x | n mod x ==0 = False
+                  | otherwise = isPrimeTest n (x-1)
+
+
+Vytvořte funkci, která vypočítá délku seznamu.
+length' :: [a] -> Int
+*Main> length' "ABCD"
+4
+length' :: [a] -> Int
+length' []  = 0
+length' (_:xs) = 1 + length' xs
+Try it!
+Vytvořte funkci, která sečte seznam celých čísel.
+Video logo.png
+sumIt :: [Int] -> Int
+*Main> sumIt [1,2,3]
+6
+sumIt :: [Int] -> Int
+sumIt []  = 0
+sumIt (x:xs) = x + sumIt xs
+Try it!
+Vytvořte funkci která vrátí první prvek v seznamu.
+getHead :: [a] -> a
+*Main> getHead [1,2,3]
+1
+getHead :: [a] -> a
+getHead (x:_) = x
+Try it!
+Vytvořte funkce která vrátí poslední prvek v seznamu.
+Video logo.png
+getLast :: [a] -> a
+*Main> getLast [1,2,3]
+3
+getLast :: [a] -> a
+getLast [x] = x
+getLast (x:xs) = getLast xs
+
+getLast' :: [a] -> a
+getLast' (x:xs) | length xs == 0 = x
+                | otherwise = getLast' xs
+Try it!
+Vytvořte funkci která ověří, zdali je daný prvek obsažen v seznamu.
+isElement :: Eq a => a -> [a] -> Bool
+*Main> isElement 2 [1,2,3]
+True
+isElement :: Eq a => a -> [a] -> Bool
+isElement _ [] = False
+isElement a (x:xs) | a == x = True 
+                   | otherwise = isElement a xs
+Try it!
+Vytvořte funkci která vrátí seznam bez prvního prvku.
+getTail :: [a] -> [a]
+*Main> getTail [1,2,3]
+[2,3]
+getTail :: [a] -> [a]                   
+getTail (_:xs) = xs
+Try it!
+CVytvořte funkci která vátí seznam bez posledního prvku.
+Video logo.png
+getInit :: [a] -> [a]
+*Main> getInit [1,2,3]
+[1,2]
+getInit :: [a] -> [a]
+getInit [_] = []
+getInit (x:xs) = x : getInit xs
+Try it!
+Vytvořte funkci, která sloučí dva seznamy do jednoho seznamu.
+Video logo.png
+combine :: [a] -> [a] -> [a]
+*Main> combine [1,2,3] [4,5]
+[1,2,3,4,5]
+combine :: [a] -> [a] -> [a]
+combine [] y = y
+combine (x:xs) y = x : combine xs y
+Try it!
+Vytvořte funkci, která najde maximum v seznamu celých čísel.
+Video logo.png
+max' :: [Int] -> Int
+*Main> max' [3,1,7,5]
+7
+max' :: [Int] -> Int
+max' [x] = x
+max' (x:y:z) | x > y = max' (x:z)
+             | otherwise = max' (y:z)
+
+max'' :: [Int] -> Int
+max'' (y:ys) = tmp y ys where
+   tmp a [] = a
+   tmp a (x:xs) | x > a = tmp x xs 
+                |otherwise = tmp a xs
+Try it!
+Vytvořte funkci, která obrátí seznam.
+Video logo.png
+reverse' :: [a] -> [a]
+*Main> reverse' [3,1,7,5]
+[5,7,1,3]
+reverse' :: [a] -> [a]             
+reverse' [] = []
+reverse' (x:xs) = (reverse' xs) ++ [x]
+
+reverse'' :: [a] -> [a] 
+reverse'' n = tmp n  []
+  where tmp [] ys = ys 
+        tmp (x:xs) ys = tmp xs (x:ys)
+Try it!
+Vytvořte funkci která vrátí skalární součet dvou vektorů.
+scalar :: [Int] -> [Int] -> Int
+*Main> scalar [1,2,3] [4,5,6]
+32
+scalar :: [Int] -> [Int] -> Int
+scalar [] [] = 0
+scalar (x:xs) (y:ys) = x*y + scalar xs ys
+
+
+
+Funkce která odebere prvních n prvků ze seznamu.
+take' :: Int -> [a] -> [a]
+*Main> take' 2 [1,2,3]
+[1,2]
+take' :: Int -> [a] -> [a]
+take' 0 _ = []
+take' _ [] = []
+take' n (x:xs) = x: take' (n-1) xs
+Try it!
+Funkce která vrátí zbytek seznamu po odebrání prvních n prvků.
+drop' :: Int -> [a] -> [a]
+*Main> drop' 2 [1,2,3]
+[3]
+drop' :: Int -> [a] -> [a]
+drop' 0 x = x
+drop' _ [] = []
+drop' n (_:xs) = drop' (n-1) xs
+Try it!
+Funkce která nalezne nejmenší prvek v seznamu. Jaké bude omezení na vstupu?
+minimum' :: [a] -> a -- Is this right?
+*Main> minimum' [1,3,4,0]
+0
+minimum' :: Ord a => [a] -> a 
+minimum' [x] = x
+minimum' (x:y:z) | x < y = minimum' (x:z)
+                 | otherwise = minimum' (y:z)
+Try it!
+Funkce která nalezne všechny celočíselné dělitele daného čísla.
+Video logo.png
+divisors :: Int -> [Int]
+*Main> divisors 32  
+[1,2,4,8,16,32]
+divisors :: Int -> [Int]
+divisors n = tmp n where
+  tmp 0 = []
+  tmp x | n mod x == 0 = x: tmp (x-1)
+        | otherwise = tmp (x-1)
+
+divisors' :: Int -> [Int]
+divisors' n =  filter (\x -> n mod x == 0) [1..n] 
+
+divisors'' :: Int -> [Int]
+divisors'' n =  [x | x<-[1..n], n mod x == 0]
+Try it!
+Funkce pracující se seznamy a n-ticemi
+Implementujte následující funkce:
+
+Funkce která sloučí dva seznamy do jednoho seznamu dvojic.
+zipThem:: [a] -> [b] -> [(a,b)]
+*Main> zipThem [1,2,3] "ABCD"
+[(1,'A'),(2,'B'),(3,'C')]
+zipThem:: [a] -> [b] -> [(a,b)]
+zipThem (x:xs) (y:ys) = (x,y) : zipThem xs ys
+zipThem _ _ = []
+Try it!
+Funkce která spočítá Kartézský součin dvou vektorů.
+dotProduct :: [a] -> [b] -> [(a,b)]
+*Main> dotProduct [1..4] "ABC"
+[(1,'A'),(1,'B'),(1,'C'),(2,'A'),(2,'B'),(2,'C'),(3,'A'),(3,'B'),(3,'C'),(4,'A'),(4,'B'),(4,'C')]
+dotProduct :: [a] -> [b] -> [(a,b)]
+dotProduct [] _ = []
+dotProduct (x:xs) ys = tmp ys ++ dotProduct xs ys where
+  tmp [] = []
+  tmp (b:bs) = (x,b) : tmp bs
+
+dotProduct' :: [a] -> [b] -> [(a,b)]  
+dotProduct' xs ys = [(x,y)|x<-xs, y<-ys]
+
+dotProduct'' :: [a] -> [b] -> [(a,b)]
+dotProduct'' x y = 
+  zip (concat (map (replicate (length y)) x))
+                     (concat (replicate (length x) y))
+Try it!
+Funkce která spočítá n-tý člen Fibonacciho posloupnosti. V řešení využijte n-tice.
+Video logo.png
+fibonacci :: Int -> Int
+*Main> fibonacci 12
+144
+fibonacci :: Int -> Int
+fibonacci n = fst (tmp n) where
+  fibStep (a,b) = (b,a+b)
+  tmp 0 = (0,1)
+  tmp x = fibStep (tmp (x-1))
+Try it!
+Funkce vyššího řádu
+Funkce která převede všechny písmena v daném stringu na velká.
+allToUpper :: String -> String
+*Main> allToUpper "aAbc"
+"AABC"
+import Data.Char
+
+allToUpper :: String -> String
+allToUpper xs = [toUpper x |x<-xs]                     
+
+allToUpper' :: String -> String
+allToUpper' xs = map toUpper xs
+Try it!
+Implementujte quicksort algoritmus. Jako pivot využijte vždy první prvek v seznamu. Pro rozdělení seznamu použijte funkci filter.
+Video logo.png
+quicksort :: (Ord a) => [a] -> [a]
+*Main> filter (<5) [1..10]
+[1,2,3,4]
+*Main> quicksort [1,5,3,7,9,5,2,1]
+[1,1,2,3,5,5,7,9]
+quicksort :: (Ord a) => [a] -> [a]
+quicksort [] = []
+quicksort (x:xs) = let lp = filter (< x) xs
+                       rp = filter (>= x) xs
+                   in quicksort lp ++ [x] ++ quicksort rp
+
+
+
+
+
+Funkce, která vygeneruje seznam všech lichých čísel v daném intervalu.
+oddList :: Int -> Int -> [Int]
+*Main> oddList 1 10   
+[1,3,5,7,9]
+oddList :: Int -> Int -> [Int]
+oddList a b = [ x |x<-[a..b], odd x]
+Try it!
+Funkce, která odstraní všechna velká písmena z řetězce.
+removeAllUpper :: String -> String
+*Main> removeAllUpper "ABCabcABC"
+"abc"
+import Data.Char
+
+removeAllUpper :: String -> String
+removeAllUpper xs = [ x |x<-xs, not (isUpper x)]
+Try it!
+Funkce, která spočítá sjednocení a průnik dvou množin.
+union :: Eq a => [a] -> [a] -> [a]
+intersection :: Eq a => [a] -> [a] -> [a]
+*Main> union [1..5] [3..10]
+[1,2,3,4,5,6,7,8,9,10]
+*Main> intersection [1..5] [3..10]
+[3,4,5]
+union :: Eq a => [a] -> [a] -> [a]
+union xs ys = xs ++ [y| y<-ys, not (elem y xs)]
+
+intersection ::  Eq a =>  [a] -> [a] -> [a]
+intersection xs ys = [y| y<-ys, elem y xs]
+Try it!
+Komplexnější funkce
+Funkce, která spočítá počet výskytů všech znaků v řetězci.
+Video logo.png
+countThem :: String -> [(Char, Int)]
+*Main>countThem "hello hello hello"
+[('h',3),('e',3),('l',6),('o',3),(' ',2)]
+unique :: String -> String
+unique n = reverse(tmp n "") where
+  tmp [] store = store
+  tmp (x:xs) store | x elem store = tmp xs store
+                   | otherwise = tmp xs (x:store)
+
+unique' :: String -> String                   
+unique' [] = []
+unique' (x:xs) = x: unique' (filter (/=x)xs)
+
+countThem :: String -> [(Char, Int)]
+countThem xs = let u = unique xs
+               in [(x, length (filter (==x) xs)) |x<-u]
+Try it!
+Goldbachova hypotéza říká, že každé kladné sudé číslo větší než 2 lze vyjádřit jako součet dvou prvočísel. Příklad: 28 = 5 + 23. Je to jedna z nejslavnějších hypotéz v teorii čísel, která však ještě nebyla dokázána. Vytvořte funkci, která pro dané celé číslo spočítá seznam dvojic prvočísel, které splňují Goldbachovu hypotézu.
+Video logo.png
+goldbach :: Int-> [(Int, Int)]
+*Main>goldbach 28
+[(5, 23),(11,17)]
+isPrime :: Int -> Bool
+isPrime n = null [x |x<-[2..ceiling (sqrt (fromIntegral n)::Double)], n mod x == 0]
+
+goldbach :: Int-> [(Int, Int)]
+goldbach n = let primes = [x |x<-[2..(n div 2)], isPrime x]
+             in [(x,n-x) |x<-primes, isPrime (n-x)]
+Try it!
+Ve většině případů, pokud je sudé číslo zapsáno jako součet dvou prvočísel, jedno z nich je velmi malé. Budeme hledat případy, které tohle pravidlo nesplňují. Vytvořte funkci která má tři parametry. První dva definují interval, kde budeme hledat Goldbachova čísla. Poslední parametr je limit. Pro každé číslo v intervalu nalezněte Goldbachovu dvojici s nejmenším prvočíslem. Pokud je nejmenšé prvočíslo větší než daný limit, přislušná dvojice bude obsažena ve výsledku.
+Video logo.png
+goldbachList :: Int -> Int-> Int -> [(Int, Int)]
+*Main>goldbachList 4 2000 50
+[(73,919),(61,1321),(67,1789),(61,1867)]
+isPrime :: Int -> Bool
+isPrime n = null [x |x<-[2..ceiling (sqrt (fromIntegral n)::Double)], n mod x == 0]
+
+goldbach :: Int-> [(Int, Int)]
+goldbach n = let primes = [x |x<-[2..(n div 2)+1], isPrime x]
+             in [(x,n-x) |x<-primes, isPrime (n-x)]
+
+goldbachList :: Int -> Int-> Int -> [(Int, Int)]
+goldbachList a b limit = filter (\(x,_)-> x>limit) [head (goldbach x) | x<-[a..b], even x]
+Try it!
+Funkce, která generuje všechny kombinace dané délky ze znaků z daného řetězce. Můžete předpokládat, že všechny znaky jsou jedinečné a daná délka není větší než délka tohoto řetězce.
+Video logo.png
+combinations :: Int -> String -> [String]
+*Main> combinations 3 "abcdef"
+["abc","abd","abe",...]
+combinations :: Int -> String -> [String]
+combinations 1 xs = [[x]| x<-xs]
+combinations n (x:xs) | n == length (x:xs) = [(x:xs)]
+                      |otherwise = [[x] ++ y |y<-combinations (n-1) xs ] 
+                                    ++ (combinations n xs)
+
+
+
+Operátory
+Definujte funkce, které provádí příslušné logické operace: not', and', or', nand', xor', impl', equ'
+Definujte 'standardní' prioritu pro případ, kdy je použijeme jako operátory.
+Implemenetujte funkci která vytiskne pravdivostní tabulku logického výrazu.
+table :: (Bool -> Bool -> Bool) -> IO ()
+table (\a b -> (and' a (or' a b)))                                                                              
+True  True  True
+True  False True
+False True  False
+False False False
+not' :: Bool -> Bool
+not' True = False
+not' False = True
+infixl 5 not' 
+
+and' :: Bool -> Bool -> Bool
+and' True True = True
+and' _ _ = False
+infixl 4 and' 
+
+or' :: Bool -> Bool -> Bool
+or' False False = False
+or' _ _ = True
+infixl 3 or' 
+
+nand' :: Bool -> Bool -> Bool
+nand' x y = not' (and' x y)
+infixl 4 nand' 
+
+xor' :: Bool -> Bool -> Bool
+xor' x y = x/=y
+infixl 3 xor' 
+
+impl' :: Bool -> Bool -> Bool
+impl' True False = False
+impl' _ _ = True
+infixl 2 impl' 
+
+equ' :: Bool -> Bool -> Bool
+equ' x y = x == y
+infixl 7 equ' 
+
+table :: (Bool -> Bool -> Bool) -> IO ()
+table expr = putStr (concat [nicePrint [x,y,(expr x y)] |x<-[True,False], y<-[True,False]])
+
+nicePrint :: [Bool] -> String
+nicePrint xs = concat [show x++"\t"| x<-xs] ++ "\n"
+Try it!
+Rozšiřte predchozí funkci tak aby přijímala výraz s libovolným počtem proměnných (počet proměnných bude zadán jako druhý parametr).
+tablen :: Int -> ([Bool] -> Bool) -> IO ()
+ tablen 3 (\[a,b,c] -> a and' (b or' c) equ' a and' b or' a and' c)
+True   True   True   => True
+True   True   False  => True
+True   False  True   => True
+True   False  False  => False
+False  True   True   => False
+False  True   False  => False
+False  False  True   => False
+False  False  False  => False
+tablen :: Int -> ([Bool] -> Bool) -> IO ()
+tablen n f = putStr(concat [nicePrint x ++ " => " ++ show(f x) ++ "\n" |x<-allValues n]) where 
+  allValues 1 = [[True], [False]]
+  allValues n = [x:y| x<-[True,False], y<-allValues (n-1)]
+
+  nicePrint :: [Bool] -> String
+  nicePrint xs = concat [show x++"\t"| x<-xs]
+Try it!
+Komplexní funkce - Huffmanovo kódování
+Vytvořte funkci která spočíta Huffmanovo kódování pro daný seznam znaků a jejich četností.
+Video logo.png
+huffman :: [(Char, Int)] -> [(Char, String)]
+*Main>  huffman [('a',45),('b',13),('c',12),('d',16),('e',9),('f',5)]
+[('a',"0"),('b',"101"),('c',"100"),('d',"111"),('e',"1101"),('f',"1100")]
+import Data.List (sortBy)
+
+huffman :: [(Char, Int)] -> [(Char, String)] 
+huffman input = 
+  let 
+    prep = [ (y, [(x,"")] ) | (x,y)<-input]            
+  in sortBy (\ (x,_) (y,_) -> compare x y) (step prep) where
+     step :: [(Int, [(Char, String)])] -> [(Char, String)]
+     step [(_, result) ] = result
+     step list = let ((a1, as2):(b1,bs2):rest) = sortBy (\ (x,_) (y,_) -> compare x y) list
+                 in step ((a1+b1, [(x,'0':a2)|(x,a2)<-as2]++[(x,'1':b2)|(x,b2)<-bs2])  : rest)
+
+
+
+Seznamy seznamů
+Video logo.png
+Uvažujte následující typ reprezentující obrázek:
+
+type Pic = [String]
+Pro tisk obrázku využijte následující funkci:
+
+pp :: Pic -> IO ()
+pp x = putStr (concat (map (++"\n") x))
+Příklad obrázku:
+
+pic :: Pic
+pic = [ "....#....",
+        "...###...",
+        "..#.#.#..",
+        ".#..#..#.",
+        "....#....",
+        "....#....",
+        "....#####"]
+*Main> pp pic
+....#....
+...###...
+..#.#.#..
+.#..#..#.
+....#....
+....#....
+....#####
+Implementujte následující funkce:
+
+Funkce, která otočí obrázek vertikáně a horizontálně
+flipV :: Pic -> Pic
+flipH :: Pic -> Pic
+*Main> pp(flipV pic)
+....#....
+...###...
+..#.#.#..
+.#..#..#.
+....#....
+....#....
+#####....
+*Main> pp(flipH pic)
+....#####
+....#....
+....#....
+.#..#..#.
+..#.#.#..
+...###...
+....#....
+
+
+flipV :: Pic -> Pic
+flipV = map reverse 
+
+flipV' :: Pic -> Pic
+flipV' xs = [reverse x|x<-xs]
+
+flipH :: Pic -> Pic
+flipH = reverse
+Try it!
+Funkce, která na sebe položi dva obrázky.
+above :: Pic -> Pic -> Pic
+*Main> pp(above pic pic)
+....#....
+...###...
+..#.#.#..
+.#..#..#.
+....#....
+....#....
+....#####
+....#....
+...###...
+..#.#.#..
+.#..#..#.
+....#....
+....#....
+....#####
+above :: Pic -> Pic -> Pic
+above x y = x ++ y
+Try it!
+Funkce, která položí vedle sebe dva obrázky (uvažujte že obrázky mají stejnou výšku).
+sideBySide :: Pic -> Pic -> Pic
+*Main> pp(sideBySide pic pic)
+....#........#....
+...###......###...
+..#.#.#....#.#.#..
+.#..#..#..#..#..#.
+....#........#....
+....#........#....
+....#####....#####
+sideBySide :: Pic -> Pic -> Pic
+sideBySide xs ys = map (\(x,y) -> x ++ y)(zip xs ys) 
+
+sideBySide':: Pic -> Pic -> Pic
+sideBySide' (x:xs) (y:ys) = (x ++ y) : sideBySide' xs ys
+sideBySide' _ _ = []
+
+sideBySide'' :: Pic -> Pic -> Pic
+sideBySide'' = zipWith (++)
+Try it!
+Funkce, která otočí obrázek doprava a doleva.
+Video logo.png
+rotateR :: Pic -> Pic
+rotateL :: Pic -> Pic
+*Main> pp(rotateR pic)       
+.......
+...#...
+....#..
+.....#.
+#######
+#....#.
+#...#..
+#..#...
+#......
+*Main> pp(rotateL pic)
+......#
+...#..#
+..#...#
+.#....#
+#######
+.#.....
+..#....
+...#...
+.......
+toRow :: String -> Pic
+toRow xs = map (\x -> [x]) xs -- [[x]|x<-xs]
+
+rotateR :: Pic -> Pic
+rotateR [x] = toRow x
+rotateR (x:xs) = (rotateR xs) sideBySide (toRow x)
+
+rotateR' :: Pic -> Pic
+rotateR' x = foldl1 sideBySide (reverse (map toRow x))
+
+
+rotateL :: Pic -> Pic
+rotateL [x] = reverse(toRow x)
+rotateL (x:xs) = reverse(toRow x) sideBySide (rotateL xs)
+
+rotateL' :: Pic -> Pic
+rotateL' x = foldl1 sideBySide (map (reverse.toRow) x)
+Try it!
+Funkce, která každý bod v obrázku zvětší n-krát.
+zoom :: Int -> Pic -> Pic
+*Main> pp(zoom 2 pic)
+........##........
+........##........
+......######......
+......######......
+....##..##..##....
+....##..##..##....
+..##....##....##..
+..##....##....##..
+........##........
+........##........
+........##........
+........##........
+........##########
+........##########
+zoom :: Int -> Pic -> Pic
+zoom n xs = [concat(map (replicate n) x)|x<-concat (map (replicate n) xs)]
+
+
+Uživatelsky definované datové typy a typové třídy
+Video logo.png
+Uvažujte následující reprezentaci výrazů
+
+data Expr = Num Int
+          | Add Expr Expr
+          | Sub Expr Expr
+          | Mul Expr Expr
+          | Div Expr Expr
+          | Var Char
+	  deriving (Eq)
+Implementujte funkci eval, která vyhodnocuje výrazy.
+Video logo.png
+eval :: Expr -> Int
+*Main> eval (Add (Num 1) (Num 2))
+3
+*Main> eval (Mul (Add (Num 1) (Num 2)) (Num 3))
+9
+eval :: Expr -> Int
+eval (Num x) = x
+eval (Add l r) =  (eval l) + (eval r)
+eval (Sub l r) =  (eval l) - (eval r)
+eval (Mul l r) =  (eval l) * (eval r)
+eval (Div l r) =  (eval l) div (eval r)
+Try it!
+Implementujte funkci showExpr, která převede výraz na String.
+Video logo.png
+showExpr :: Expr -> String
+*Main> showExpr (Add (Num 1) (Num 2))
+"1+2"
+*Main> showExpr (Mul (Add (Num 1) (Num 2)) (Num 3))
+"(1+2)*3"
+*Main> showExpr (Mul (Add (Num 1) (Mul (Num 2) (Var 'x'))) (Mul (Num 3) (Var 'x')))
+"(1+2*x)*3*x"
+*Main> showExpr (Mul (Num 2) (Mul (Var 'x') (Var 'x')))                            
+"2*x*x"
+showExpr :: Expr -> String
+showExpr expr = showExpr' expr NoOp
+
+data Operation = Hi | HiDiv | Lo | LoSub | NoOp deriving (Eq)
+
+showExpr' :: Expr -> Operation -> String
+showExpr' (Num x) _ = show x
+showExpr' (Var x) _ =  [x]
+showExpr' (Add l r) op = let
+  x = showExpr' l Lo ++"+"++showExpr' r Lo
+  in if op == Hi || op == HiDiv || op==LoSub 
+     then "(" ++ x ++")"
+     else x
+showExpr' (Sub l r) op = let
+  x = showExpr' l Lo ++"-"++showExpr' r LoSub
+  in if op == Hi || op == HiDiv || op==LoSub 
+     then "(" ++ x ++")"
+     else x     
+showExpr' (Mul l r) op = let
+  x = showExpr' l Hi ++"*"++showExpr' r Hi
+  in if op == HiDiv
+     then "(" ++ x ++")"
+     else x
+showExpr' (Div l r) op = let
+  x = showExpr' l Hi ++"/"++showExpr' r HiDiv
+  in if op == HiDiv
+     then "(" ++ x ++")"
+     else x
+Try it!
+Rozšiřte třídu Show tak, aby ji bylo možno využít s našimi výrazy.
+Video logo.png
+*Main> Add (Num 1) (Num 2)
+"1+2"
+*Main> Mul (Add (Num 1) (Num 2)) (Num 3)
+"(1+2)*3"
+*Main> Mul (Add (Num 1) (Mul (Num 2) (Var 'x'))) (Mul (Num 3) (Var 'x'))
+"(1+2*x)*3*x"
+*Main> Mul (Num 2) (Mul (Var 'x') (Var 'x'))           
+"2*x*x"
+instance (Show Expr) where
+  show = showExpr
+Try it!
+Implementujte funkci derivation reprezentující symbolickou derivaci daného výrazu.
+deriv :: Expr-> Char -> Expr
+*Main> deriv (Add (Num 1) (Num 2)) 'x'
+0+0
+*Main> deriv (Mul (Num 2) (Mul (Var 'x') (Var 'x'))) 'x'
+0*x*x+2*(1*x+x*1)
+*Main> deriv (Mul (Num 2) (Mul (Var 'x') (Var 'x'))) 'x'
+0*x*x+2*(1*x+x*1)
+deriv :: Expr-> Char -> Expr
+deriv (Num _) _ = (Num 0)     
+deriv (Var x) y | x==y = (Num 1)
+                | otherwise = (Num 0)
+deriv (Add l r) x = Add (deriv l x) (deriv r x)                
+deriv (Sub l r) x = Sub (deriv l x) (deriv r x)
+deriv (Mul l r) x = Add (Mul (deriv l x) r) (Mul l (deriv r x))
+deriv (Div l r) x = 
+   Div
+    (Sub (Mul (deriv l x) r) (Mul l (deriv r x)))
+    (Mul r r)
+
+
+
+Binární strom
+Vytvořte datový typ Tree, který definuje binární strom, kde jsou hodnoty uloženy v listech a také ve větvích.
+data Tree a = Leaf a 
+            | Branch a (Tree a) (Tree a) deriving (Show)
+Připravte si příklad binárního stromu.
+testTree1 :: Tree Int            
+testTree1 = Branch 12 (Branch 23 (Leaf 34) (Leaf 45)) (Leaf 55)
+
+testTree2 :: Tree Char            
+testTree2 = Branch 'a' (Branch 'b' (Leaf 'c') (Leaf 'd')) (Leaf 'e')
+Vytvořte funkci, která sečte všechny hodnoty uložené ve stromu celých čísel.
+sum' :: Tree Int -> Int
+sum' :: Tree Int -> Int
+sum' (Leaf x) = x
+sum' (Branch x l r) = sum' l + x + sum' r
+Vytvořte funkci, která extrahuje všechny hodnoty ze stromu do seznamu.
+toList :: Tree a -> [a]
+toList :: Tree a -> [a]
+toList (Leaf x) = [x]
+toList (Branch x l r) = toList l ++ [x] ++ toList r
+Vytvořte funkci, která najde maximální hodnotu uloženou ve stromu.
+maxTree :: Ord a => Tree a -> a
+maxTree :: Ord a => Tree a -> a
+maxTree (Leaf x) = x
+maxTree (Branch x l r) = maximum [x, maxTree l, maxTree r]
+Vytvořte funkci, která vrátí maximální hloubku stromu.
+depthTree :: Tree a -> Int
+depthTree :: Tree a -> Int
+depthTree (Leaf x) = 1
+depthTree (Branch x l r) = max (depthTree l) (depthTree r) + 1
+Vytvořte funkci, která vrátí jako seznam ty prvky seznamu, které jsou větší než zadaná hodnota.
+getGreaterElements :: Ord a => Tree a -> a -> [a]
+getGreaterElements :: Ord a => Tree a -> a -> [a]
+getGreaterElements (Leaf x) y | x > y = [x]
+                              | otherwise = []
+getGreaterElements (Branch x l r) y | x > y = [x] ++  getGreaterElements l y ++ getGreaterElements r y 
+                                    | otherwise = getGreaterElements l y ++ getGreaterElements r y
+Jednou z možností, jak reprezentovat strom v textové podobě, je a(b(d,e),c(e,f(g,h))). Vytvořte funkci, která bude schopna načíst a uložit strom z takového zápisu.
+Video logo.png
+toString :: Show a => Tree a -> String
+fromString :: Read a => String -> Tree a
+toString :: Show a => Tree a -> String
+toString (Leaf x) = show x
+toString (Branch x l r) = show x ++ "(" ++ (toString l) ++ "," ++ (toString r) ++ ")"
+
+fromString :: Read a => String -> Tree a
+fromString inp = fst (fromString' inp) where
+  fromString' :: Read a => String -> (Tree a,String)
+  fromString' inp = 
+    let
+      before = takeWhile (\x ->  x /='(' &&  x /=',' &&  x/=')') inp 
+      after = dropWhile (\x ->  x /='(' &&  x /=',' && x/=')') inp
+      value = read before
+    in if null after || head after /= '(' then (Leaf value, after) else 
+        let
+          (l,after') = fromString' (tail after)
+          (r,after'') = fromString' (tail after') 
+        in (Branch value l r, tail after'')
+Doplňková cvičení
+Vytvořte funkci, která spočítá všechny listy ve stromu.
+leafCount :: Tree a -> Int
+Vytvořte funkci, která spočítá všechny větve stromu.
+branchCount :: Tree a -> Int
+Vytvoření funkce, která zkontroluje, zda je daný prvek uložen ve stromu.
+contains :: Eq a => Tree a -> a -> Bool
+Vytvoření funkce, která vrátí počet prvků větší než zadaná hodnota.
+greaterThan :: Ord a => Tree a -> a -> Int
+Uvažujme následující alternativní definici binárního stromu.
+data Tree2 a = Null | Branch a (Tree2 a) (Tree2 a)
+Je tato definice ekvivalentní předchozí definici? Pokud ne, vysvětlete proč a uveďte příklad stromu, který lze zkonstruovat podle první definice, ale ne podle druhé, nebo naopak.
+Implementujte všechny výše uvedené funkce upravené pro alternativní definici binárního stromu.
+Abstraktní datové typy
+Video logo.png
+Vytvořte implementaci abstraktního datového typu Stack s následujícími funkcemi:
+push :: a -> Stack a -> Stack a
+pop :: Stack a -> Stack a
+top :: Stack a -> a
+isEmpty :: Stack a ->Bool
+module Stack(Stack, emptyS, push, pop, top, isEmpty) where
+  data Stack a = Stack [a] deriving Show
+
+  emptyS :: Stack a
+  emptyS = Stack []
+
+  push :: a -> Stack a -> Stack a
+  push x (Stack y) = Stack (x:y)
+  
+  pop :: Stack a -> Stack a
+  pop (Stack (_:xs)) = Stack xs
+
+  top :: Stack a -> a
+  top (Stack (x:_)) = x
+
+  isEmpty :: Stack a ->Bool
+  isEmpty (Stack []) = True
+  isEmpty _ = False
+Vytvořte implementaci abstraktního datového typu Queue s následujícími funkcemi:
+isEmpty :: Queue a -> Bool
+addQ :: a -> Queue a -> Queue a
+remQ :: Queue a -> (a, Queue a)
+module Queue(Queue, emptyQ, isEmptyQ, addQ, remQ) where
+    data Queue a = Qu [a] deriving Show
+
+    emptyQ :: Queue a
+    emptyQ = Qu []
+    
+    isEmptyQ :: Queue a -> Bool
+    isEmptyQ (Qu q) = null q
+    
+    addQ :: a -> Queue a -> Queue a
+    addQ x (Qu xs) = Qu (xs++[x])
+    
+    remQ :: Queue a -> (a,Queue a)
+    remQ q@(Qu xs) | not (isEmptyQ q) = (head xs, Qu (tail xs))
+                   | otherwise        = error "remQ"
+
+
+Složitá datová struktura
+Uvažujme následující datovou strukturu reprezentující nějaký druh grafického uživatelského rozhraní.
+
+data Point = Point {column::Int,row::Int} deriving (Show)
+
+data Position = Position {leftTopCorner :: Point, width :: Int, height :: Int} 
+
+data Component
+  = TextBox {name :: String, position :: Position, text :: String}
+  | Button {name :: String, position :: Position, text :: String}
+  | Container {name :: String, children :: [Component]}
+Jako příklad můžeme použít následující datovou strukturu.
+
+gui :: Component
+gui =
+  Container "My App"
+    [ Container "Menu"
+        [ Button "btn_new" (Position (Point 0 0) 100 20) "New",
+          Button "btn_open" (Position (Point 100 0) 100 20) "Open",
+          Button "btn_close" (Position (Point 200 0) 100 20) "Close"
+        ],
+      Container "Body" [TextBox "textbox_1" (Position (Point 0 20) 300 500) "Some text goes here"],
+      Container "Footer" []
+    ]
+Přidejte typ Component do typove třídy Show.
+Výsledek pro naše data z předchozího příkladu by měl vypadat takto.
+
+ghci> gui
+Container - My App
+        Container - Menu
+                (0,0)[100,20] Button[btn_new]: New
+                (100,0)[100,20] Button[btn_open]: Open
+                (200,0)[100,20] Button[btn_close]: Close
+        Container - Body
+                (0,20)[300,500] TextBox[textbox_1]: Some text goes here
+        Container - Footer
+instance Show Position where
+    show (Position (Point col row) width height) = "(" ++ show col ++ "," ++ show row ++ ")["++ show width++","++ show height++"]"
+
+instance Show Component where
+    show :: Component -> String
+    show gui = showIndent "" gui where
+        showIndent ind (TextBox name position text) = ind ++ show position ++ " TextBox[" ++ name ++ "]: " ++ text ++"\n" 
+        showIndent ind (Button name position text) = ind ++ show position ++ " Button[" ++ name ++ "]: " ++ text ++"\n"
+        showIndent ind (Container name children) = let 
+            inner = concat[showIndent (ind++"\t") c |c<-children]
+            in ind ++ "Container - " ++ name ++ "\n" ++ inner
+Vytvořte funkci insertInto, která vloží prvek do existujícího kontejneru z GUI. Parametry funkce budou:
+prvním parametrem bude GUI, do kterého budeme vkládat nový prvek;
+druhým parametrem bude název kontejneru, do kterého vkládáme nový prvek, lze bezpečně předpokládat, že bude vždy existovat. Prvek bude v kontejneru umístěn jako poslední;
+posledním parametrem je vložený prvek.
+insertInto :: Component -> String -> Component -> Component
+ghci> insertInto gui "Footer" (TextBox "Done" (Position (Point 0 500) 300 10) "We are done!")
+Container - My App
+        Container - Menu
+                (0,0)[100,20] Button[btn_new]: New
+                (100,0)[100,20] Button[btn_open]: Open
+                (200,0)[100,20] Button[btn_close]: Close
+        Container - Body
+                (0,20)[300,500] TextBox[textbox_1]: Some text goes here
+        Container - Footer
+                (0,500)[300,10] TextBox[Done]: We are done!
+insertInto :: Component -> String -> Component -> Component
+insertInto (Container cName children ) toName element 
+    | cName == toName = Container cName (children++[element]) 
+    | otherwise = Container cName [insertInto c toName element  |c<-children]
+insertInto x toName element = x
+Vytvořte funkci deleteFrom, která odstraní prvek ze stávajícího kontejneru z GUI. Parametry funkcí budou:
+prvním parametrem bude GUI, kde odstraňujeme prvek;
+druhý parametr je název komponenty, která bude odstraněna, můžete bezpečně předpokládat, že bude vždy existovat;
+deleteFrom :: Component -> String -> Component
+ghci> deleteFrom gui "btn_close"            
+Container - My App
+  Container - Menu
+    (0,0)[100,20] Button[btn_new]: New
+    (100,0)[100,20] Button[btn_open]: Open
+  Container - Body
+    (0,20)[300,500] TextBox[textbox_1]: Some text goes here
+  Container - Footer
+deleteFrom :: Component -> String -> Component
+deleteFrom (Container x child) target = Container x [deleteFrom c target |c<-child, name c /=target ]
+deleteFrom c _ = c
+Rozšiřte definici tlačítka v našem GUI takto.
+data Event = MouseEvent Point
+           | KeyEvent {keyPressed::Char} deriving (Show)
+...
+  | Button {name :: String, position :: Position, text :: String, onClick :: Maybe (Event -> String)}
+...
+Naše onClick je funkce, která se spustí po kliknutí na tlačítko. Parametrem této funkce jsou data popisující událost, která se osluhu spustila.
+
+...
+[ Button "btn_new" (Position (Point 0 0) 100 20) "New" (Just (\event -> "Clicked on new button.")),
+  Button "btn_open" (Position (Point 100 0) 100 20) "Open" Nothing,
+  Button "btn_close" (Position (Point 200 0) 100 20) "Close" (Just (\event -> "Clicked on close button.")) ]
+...
+Vytvořte funkci clickOnButton, která dostane naše GUI a nějakou událost. Pokud je parametrem instance MouseEvent a pozice, na kterou jsme klikli, je uvnitř některého z tlačítek GUI, pak vyhodnotí odpovídající funkci onClick a výsledkem bude získáný řetězec. Ve všech ostatních případech bude výsledkem Nothing.
+clickOnButton :: Component -> Event -> Maybe String
+ghci> clickOnButton gui (MouseEvent (Point 5 5))
+Just "Clicked on new button."
+ghci> clickOnButton gui (MouseEvent (Point 205 5))
+Just "Clicked on close button."
+ghci> clickOnButton gui (MouseEvent (Point 205 50))
+Nothing
+isInside :: Point -> Position -> Bool
+isInside (Point pCol pRow) (Position (Point cornerCol cornerRow) width height) =
+     cornerCol <= pCol && pCol <= cornerCol + width && cornerRow <= pRow && pRow <= cornerRow + height
+
+getFirstOrNothing :: [Maybe a] -> Maybe a
+getFirstOrNothing [] = Nothing
+getFirstOrNothing (Nothing:xs) = getFirstOrNothing xs
+getFirstOrNothing (Just x: xs) = Just x
+
+clickOnButton :: Component -> Event -> Maybe String
+clickOnButton (Button {position = pos, onClick = (Just func)}) (MouseEvent point) | isInside point pos = Just (func (MouseEvent point))
+clickOnButton (Container {children=inner}) event = getFirstOrNothing [clickOnButton c event |c<-inner]
+clickOnButton _ _ = Nothing
+Doplňková cvičení
+Uvažujme následující definici a příklad m-árního stromu.
+data MTree a = MTree a [MTree a]
+testTree1 :: MTree Int            
+testTree1 = MTree 1 [(MTree 2 [(MTree 3 []),(MTree 4 [(MTree 5 []),(MTree 6 [])]), (MTree 7 []),(MTree 8 [])]), (MTree 9 [])]
+Vytvořte funkci, která sečte všechny hodnoty uložené ve stromu m-ary.
+msum :: MTree Int -> Int
+Vytvořte funkci, která extrahuje všechny hodnoty z m-arního strimu do seznamu.
+mToList :: MTree a -> [a]
+Vytvořte funkci, která spočítá všechny listy v m-arním stromu.
+mLeafCount :: MTree a -> Int
+Vytvořte funkci, která najde maximální hodnotu uloženou v m-árním stromu.
+mMaxTree :: Ord a => MTree a -> a
+Vytvoření funkce, která zkontroluje, zda je daný prvek uložen v m-árním
+stromu.
+
+mContains :: Eq a => MTree a -> a -> Bool
+Vytvoření funkce, která vrátí počet prvků větších než zadaná hodnota.
+mGreaterThan :: Ord a => MTree a -> a -> Int
+
+
+
+Toto jsou všechny kody co jsem během semestru napsal, nyní budu chtít na základě těchto znalostí napsat tento domácúukol, dokážeš ho vygenerovat prosím? 
+
+Home Preparation For Test 3 - 2024
+Data definition
+Consider following type representing a maze:
+
+type Maze = [String]
+If you want to print this maze on a screen you can use:
+
+printMaze :: Maze -> IO ()
+printMaze x = putStr (concat (map (++"\n") x))
+Maze example:
+
+sample1 :: Maze
+sample1 = ["*********",
+           "* *   * *",
+           "* * * * *",
+           "* * * * *",
+           "*   *   *",
+           "******* *",
+           "        *",
+           "*********"]
+sample2 :: Maze
+sample2 = ["       ",
+           "       ",
+           "  ***  ",
+           "  ***  ",
+           "  ***  ",
+           "       ",
+           "       "]
+sample3 :: Maze
+sample3 = ["  * *  ",
+           " ##### ",
+           "  ***  ",
+           "  * *  ",
+           "  ***  ",
+           "     * ",
+           "       "]
+sample4 :: Maze
+sample4 = ["*********",
+           "*s*   *e*",
+           "* *   * *",
+           "* *   * *",
+           "*       *",
+           "******* *",
+           "        *",
+           "*********"]
+arrow :: Maze
+arrow = [ "....#....",
+          "...###...",
+          "..#.#.#..",
+          ".#..#..#.",
+          "....#....",
+          "....#....",
+          "....#####"]
+ghci> printMaze sample1                                           
+*********
+* *   * *
+* * * * *
+* * * * *
+*   *   *
+******* *
+        *
+*********
+Tasks
+Create functions that:
+
+Place one maze above another.
+above :: Maze -> Maze -> Maze
+*Main> printMaze(above arrow arrow)
+....#....
+...###...
+..#.#.#..
+.#..#..#.
+....#....
+....#....
+....#####
+....#....
+...###...
+..#.#.#..
+.#..#..#.
+....#....
+....#....
+....#####
+Place two mazes side by side (consider, that they have the same height).
+sideBySide :: Maze -> Maze -> Maze
+*Main> printMaze(sideBySide arrow arrow)
+....#........#....
+...###......###...
+..#.#.#....#.#.#..
+.#..#..#..#..#..#.
+....#........#....
+....#........#....
+....#####....#####
+Rotate maze to the left and to the right.
+rotateR :: Maze -> Maze
+rotateL :: Maze -> Maze
+*Main> printMaze (rotateR arrow)       
+.......
+...#...
+....#..
+.....#.
+#######
+#....#.
+#...#..
+#..#...
+#......
+*Main> printMaze(rotateL arrow)
+......#
+...#..#
+..#...#
+.#....#
+#######
+.#.....
+..#....
+...#...
+.......
+Define a function getFromMaze that takes a character from a maze. The coordinates are given as: (row index, column index) where the indexes start from (0,0). The coordinate (0,0) is a top left corner.
+getFromMaze :: Maze -> (Int, Int) -> Char
+ghci> getFromMaze  sample1  (1,1)
+' '
+Using the same coordinates as for the function above, define a function putIntoMaze that takes a maze and a list of triplets (row index, column index, character) and puts on given coordinate given character.
+putIntoMaze :: Maze -> [(Int, Int, Char)] -> Maze
+ghci> printMaze(putIntoMaze sample2 [(0,0,'1'),(6,6,'2'),(0,6,'3')]) 
+1     3
+
+  ***
+  ***
+  ***
+
+      2
+Using the same coordinates as for the functions above, define a function getPart that takes a maze and extracts a rectangular part of this maze. The maze is given as first parameter. The extracted part is defined by the position of the top left corner (second parameter) and its size (third parameter, given as (height, width)).
+getPart :: Maze -> (Int,Int) -> (Int,Int) -> Maze
+ghci> printMaze(getPart sample1 (1,1) (7,7))
+ *   *
+ * * *
+ * * *
+   *
+******
+
+*******
+Implement the function solveMaze. It has 1 argument. It is a list of strings representing a maze row by row from top to bottom ('*' - wall, ' ' - empty square, 's' - starting position, 'e' - ending possition). At the beginning we are at position 's' and we want to get the length of the shortest path to the position denotated by 'e'. Such path compose from steps. in each step we can move one square left, right, up or down. The function returns a number of these steps in the shortest path from 's' to 'e'.
+solveMaze :: Result -> Int
+solveMaze sample4 
+12
+
+
+
+
+
+
+
+
+
