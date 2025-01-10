@@ -1,0 +1,39 @@
+inRangeForMines :: Maze -> (Int,Int) -> Bool
+inRangeForMines maze (r,c) =
+  r >= 0 && c >= 0 &&
+  r < length maze &&
+  c < length (head maze)
+
+countMinesAround :: Maze -> (Int,Int) -> Int
+countMinesAround maze (r,c) =
+  length
+    [ (nr,nc)
+    | nr <- [r-1 .. r+1]
+    , nc <- [c-1 .. c+1]
+    , (nr,nc) /= (r,c)
+    , inRangeForMines maze (nr,nc)
+    , getFromMaze maze (nr,nc) == '*'
+    ]
+
+replaceIfEmpty :: Maze -> (Int,Int) -> Char
+replaceIfEmpty maze (r,c) =
+  let ch = getFromMaze maze (r,c)
+  in case ch of
+       '.' -> intToDigit (countMinesAround maze (r,c))
+       _   -> ch
+
+minesInMaze :: Maze -> Maze
+minesInMaze oldMaze =
+  [ [ replaceIfEmpty oldMaze (r,c)
+    | c <- [0 .. length (head oldMaze) - 1]
+    ]
+  | r <- [0 .. length oldMaze - 1]
+  ]
+
+putStrLn "\n-----------------------------------"
+putStrLn "Now demonstrating minesInMaze on a custom mineMaze:"
+putStrLn "Original mineMaze:"
+printMaze mineMaze
+
+putStrLn "\nmineMaze after counting mines around free fields:"
+printMaze (minesInMaze mineMaze)
