@@ -72,8 +72,6 @@ getFromMaze maze (r, c) = (maze !! r) !! c
 -------------------------
 -- 5) PUT INTO MAZE
 -------------------------
--- Pozor, tady už je funkce replaceChar pro řetězce.
--- Pro práci s minami použijeme jinou funkci, aby nebyl konflikt názvů.
 replaceChar :: String -> Int -> Char -> String
 replaceChar []     _ _  = []
 replaceChar (x:xs) 0 ch = ch : xs
@@ -152,14 +150,12 @@ inRange i maxVal = (i >= 0) && (i < maxVal)
 -- FUNKCE PRO POČÍTÁNÍ MIN OKOLO POLÍČKA
 ------------------------------------
 
--- 1) Zjistíme, zda je zadaná souřadnice v bludišti 
 inRangeForMines :: Maze -> (Int,Int) -> Bool
 inRangeForMines maze (r,c) =
   r >= 0 && c >= 0 &&
   r < length maze &&
   c < length (head maze)
 
--- 2) Spočítáme, kolik je v okolí (v 8 sousedech) min ('*')
 countMinesAround :: Maze -> (Int,Int) -> Int
 countMinesAround maze (r,c) =
   length
@@ -171,8 +167,6 @@ countMinesAround maze (r,c) =
     , getFromMaze maze (nr,nc) == '*'
     ]
 
--- 3) Pokud je znak volné pole (typicky '.' nebo ' '), nahradíme ho číslicí (počet min okolo)
---    Jinak ponecháme původní znak (mine, wall, apod.).
 replaceIfEmpty :: Maze -> (Int,Int) -> Char
 replaceIfEmpty maze (r,c) =
   let ch = getFromMaze maze (r,c)
@@ -183,7 +177,6 @@ replaceIfEmpty maze (r,c) =
        '.' -> intToDigit (countMinesAround maze (r,c))
        _   -> ch
 
--- 4) Projedeme celé bludiště a podle potřeby nahradíme znak (jen pro volná pole)
 minesInMaze :: Maze -> Maze
 minesInMaze oldMaze =
   [ [ replaceIfEmpty oldMaze (r,c)
@@ -192,10 +185,7 @@ minesInMaze oldMaze =
   | r <- [0 .. length oldMaze - 1]
   ]
 
--------------------------
--- PŘÍKLAD VLASTNÍHO MAZE S MINAMI
--------------------------
--- Tohle je jen ukázka, jak by mohlo vypadat Maze s minami:
+
 mineMaze :: Maze
 mineMaze = 
   [ "#######"
