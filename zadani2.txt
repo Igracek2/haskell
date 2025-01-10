@@ -172,7 +172,6 @@ inRange i maxVal = (i >= 0) && (i < maxVal)
 -------------------------
 -- 8) FIND PATH & MAKE PATH
 -------------------------
--- Najde cestu od startu k cíli (souřadnice) - BFS vrací Maybe seznam souřadnic
 findPath :: Maze -> (Int, Int) -> (Int, Int) -> Maybe [(Int, Int)]
 findPath maze start goal =
     bfsPath [(start, [start])] [start]  -- fronta: (souřadnice, dosavadní_cesta)
@@ -194,14 +193,12 @@ findPath maze start goal =
       (rr, cc) `notElem` visited &&
       getFromMaze mz (rr, cc) /= '*'
 
--- Vyznačí čísly (1,2,3,...) nejkratší cestu v novém bludišti
 makePath :: Maze -> (Int, Int) -> (Int, Int) -> Maze
 makePath maze start end =
     case findPath maze start end of
       Nothing    -> maze  -- cesta neexistuje
       Just path  -> putPathNumbers maze path
 
--- Každý krok cesty dostane své pořadové číslo (jako Char)
 putPathNumbers :: Maze -> [(Int, Int)] -> Maze
 putPathNumbers maze coords =
   let indexedCoords = zip [1..] coords  -- [(1,(r1,c1)), (2,(r2,c2)), ...]
