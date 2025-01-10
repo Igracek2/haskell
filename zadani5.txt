@@ -151,19 +151,14 @@ inRange i maxVal = (i >= 0) && (i < maxVal)
 -------------------------
 -- 8) SOLVE ALL (BFS pro všechna volná pole)
 -------------------------
--- Tato funkce projde celé bludiště od dané startovní pozice (sr, sc)
--- a spočítá vzdálenost do každého volného pole. Tam potom vloží
--- (v podobě jedné číslice) vzdálenost mod 10.
--------------------------
+
 
 solveAll :: Maze -> (Int, Int) -> Maze
 solveAll maze (sr, sc) =
-  let allDistances = bfsAll maze (sr, sc)  -- získáme vzdálenost ke všem volným buňkám
+  let allDistances = bfsAll maze (sr, sc)
       newMaze      = putDistances maze allDistances
   in newMaze
 
--- BFS, který neskončí u 'e', ale projde všechny dosažitelné buňky.
--- Vrátí seznam (row, col, distance) pro každou volnou buňku.
 bfsAll :: Maze -> (Int, Int) -> [(Int, Int, Int)]
 bfsAll maze (startR, startC) =
   let initialQueue = [(startR, startC, 0)]
@@ -171,9 +166,9 @@ bfsAll maze (startR, startC) =
   in bfsAllLoop maze initialQueue visited []
 
 bfsAllLoop :: Maze 
-           -> [(Int, Int, Int)] -- ^ fronta (r, c, distance)
-           -> [(Int, Int)]      -- ^ navštívené souřadnice
-           -> [(Int, Int, Int)] -- ^ výsledky (r, c, distance)
+           -> [(Int, Int, Int)] 
+           -> [(Int, Int)]
+           -> [(Int, Int, Int)] 
            -> [(Int, Int, Int)]
 bfsAllLoop _    []            _        results = results
 bfsAllLoop maze ((r,c,d):qs) visited results =
@@ -184,21 +179,17 @@ bfsAllLoop maze ((r,c,d):qs) visited results =
         newVisited = visited ++ validN
     in bfsAllLoop maze newQueue newVisited newResults
 
--- Vloží do bludiště pro všechny volné buňky jejich vzdálenost, 
--- vypsanou jako poslední číslici (distance mod 10).
+
 putDistances :: Maze -> [(Int, Int, Int)] -> Maze
 putDistances maze [] = maze
 putDistances maze ((r,c,d):rest) =
   let oldChar = getFromMaze maze (r,c)
-      -- Pokud je starý znak ' ' (volné pole), nahradíme ho číslicí.
-      -- Pokud byste chtěli přepisovat i 's' nebo 'e', upravte podmínku.
       newMaze =
         if oldChar == ' '
           then putOne maze r c (distanceToChar d)
           else maze
   in putDistances newMaze rest
 
--- Pomocná funkce pro převedení čísla na poslední cifru (0..9)
 distanceToChar :: Int -> Char
 distanceToChar d =
   let digit = d `mod` 10
@@ -242,7 +233,5 @@ main = do
         else putStrLn "No solution found for the maze!"
     
     putStrLn "\n--- solveAll: BFS do všech volných polí ---"
-    -- Zde nastavte startovní pozici na řádek 1, sloupec 1
-    -- nebo na jinou souřadnici, kde je volné pole.
     let solvedMaze = solveAll sample4 (1,1)
     printMaze solvedMaze
