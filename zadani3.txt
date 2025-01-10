@@ -1,36 +1,252 @@
+module SimpleMaze where
+
+-------------------------
+-- TYPE AND PRINT
+-------------------------
+type Maze = [String]
+
+printMaze :: Maze -> IO ()
+printMaze x = putStr (concat (map (++"\n") x))
+
+-------------------------
+-- VZOROVÝ MAZE
+-------------------------
+sample4 :: Maze
+sample4 = ["*********",
+           "*s*   *e*",
+           "* *   * *",
+           "* *   * *",
+           "*       *",
+           "******* *",
+           "        *",
+           "*********"]
+
+-------------------------
+-- 1) ABOVE
+-------------------------
+above :: Maze -> Maze -> Maze
+above m1 m2 = m1 ++ m2
+
+-------------------------
+-- 2) SIDE BY SIDE
+-------------------------
+sideBySide :: Maze -> Maze -> Maze
+sideBySide []         []         = []
+sideBySide (row1:xs1) (row2:xs2) = (row1 ++ row2) : sideBySide xs1 xs2
+sideBySide x          []         = x
+sideBySide []         y          = y
+
+-------------------------
+-- 3) ROTATIONS
+-------------------------
+take' :: Int -> [a] -> [a]
+take' 0 _      = []
+take' _ []     = []
+take' n (x:xs) = x : take' (n-1) xs
+
+drop' :: Int -> [a] -> [a]
+drop' 0 xs     = xs
+drop' _ []     = []
+drop' n (_:xs) = drop' (n-1) xs
+
+transpose :: Maze -> Maze
+transpose []     = []
+transpose ([]:_) = []
+transpose rows   =
+  let heads = map head rows
+      tails = map tail rows
+  in heads : transpose tails
+
+rotateR :: Maze -> Maze
+rotateR m = transpose (reverse m)
+
+rotateL :: Maze -> Maze
+rotateL m = reverse (transpose m)
+
+-------------------------
+-- 4) GET FROM MAZE
+-------------------------
+getFromMaze :: Maze -> (Int, Int) -> Char
+getFromMaze maze (r, c) = (maze !! r) !! c
+
+-------------------------
+-- 5) PUT INTO MAZE
+-------------------------
+replaceChar :: String -> Int -> Char -> String
+replaceChar []     _ _  = []
+replaceChar (x:xs) 0 ch = ch : xs
+replaceChar (x:xs) n ch = x : replaceChar xs (n-1) ch
+
+putIntoMaze :: Maze -> [(Int, Int, Char)] -> Maze
+putIntoMaze maze [] = maze
+putIntoMaze maze ((row, col, ch):rest) =
+    let newMaze = putOne maze row col ch
+    in putIntoMaze newMaze rest
+
+putOne :: Maze -> Int -> Int -> Char -> Maze
+putOne (r:rs) 0 col ch = replaceChar r col ch : rs
+putOne (r:rs) n col ch = r : putOne rs (n-1) col ch
+putOne []     _ _   _  = []
+
+-------------------------
+-- 6) GET PART
+-------------------------
+getPart :: Maze -> (Int, Int) -> (Int, Int) -> Maze
+getPart maze (startR, startC) (h, w) =
+  let slicedRows = take' h (drop' startR maze)
+  in map (\row -> take' w (drop' startC row)) slicedRows
+
+-------------------------
+-- 7) SOLVE MAZE (BFS)
+-------------------------
+solveMaze :: Maze -> Int
+solveMaze maze =
+  let sPos    = findStart maze
+      initial = [(fst sPos, snd sPos, 0)] -- (r, c, distance=0)
+  in bfs maze initial [(fst sPos, snd sPos)]  -- visited
+
+findStart :: Maze -> (Int, Int)
+findStart maze = findHelper maze 0
+  where
+    findHelper []     _    = error "No 's' in maze!"
+    findHelper (r:rs) row =
+      case elemIndex 's' r of
+        Just col -> (row, col)
+        Nothing  -> findHelper rs (row+1)
+
+elemIndex :: Char -> String -> Maybe Int
+elemIndex _ []     = Nothing
+elemIndex ch (x:xs)
+  | ch == x  = Just 0
+  | otherwise = case elemIndex ch xs of
+      Just i  -> Just (i+1)
+      Nothing -> Nothing
+
+bfs :: Maze -> [(Int,Int,Int)] -> [(Int,Int)] -> Int
+bfs _    []                  _       = -1
+bfs maze ((r,c,d):rest) visited =
+  let ch = getFromMaze maze (r,c)
+  in if ch == 'e'
+     then d
+     else
+       let neighbors  = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+           validN     = filter (isValid maze visited) neighbors
+           newQueue   = rest ++ [(nr,nc,d+1) | (nr,nc) <- validN]
+           newVisited = visited ++ validN
+       in bfs maze newQueue newVisited
+
+isValid :: Maze -> [(Int,Int)] -> (Int,Int) -> Bool
+isValid maze visited (rr,cc) =
+    inRange rr (length maze) &&
+    inRange cc (length (head maze)) &&
+    notElem (rr,cc) visited &&
+    let ch = getFromMaze maze (rr,cc)
+    in ch /= '*'
+
+inRange :: Int -> Int -> Bool
+inRange i maxVal = (i >= 0) && (i < maxVal)
+
+-------------------------
+-- 8) NOVÉ FUNKCE PRO MINIMAPS
+-------------------------
+
+-- | move posune (row, col) o "steps" podle směru d
+--   'd' = dolů, 'u' = nahoru, 'l' = doleva, 'r' = doprava
 move :: (Int, Int) -> (Char, Int) -> (Int, Int)
 move (r,c) (d,steps) =
   case d of
-    'd' -> (r+steps, c)
-    'u' -> (r-steps, c)
-    'l' -> (r, c-steps)
-    'r' -> (r, c+steps)
+    'd' -> (r + steps, c)
+    'u' -> (r - steps, c)
+    'l' -> (r, c - steps)
+    'r' -> (r, c + steps)
     _   -> (r,c)
 
-makeMiniMap :: Maze -> (Int,Int) -> Maze
-makeMiniMap maze (r,c) =
-  putIntoMaze (getPart maze (r-1,c-1) (3,3)) [(1,1,'.')]
-
-combineMiniMaps :: [Maze] -> Maze
-combineMiniMaps miniMaps =
-  let line = replicate 3 '='
-      wrapOne m = line : m ++ [line]
-  in concatMap wrapOne miniMaps
-
+-- | collectPositions vezme start a seznam kroků
+--   a vrátí všechny pozice, kde došlo ke změně směru,
+--   plus první (start) a poslední (end) pozici.
 collectPositions :: (Int,Int) -> [(Char,Int)] -> [(Int,Int)]
 collectPositions start moves =
   let
     go _ [] _ = []
-    go pd ((d,s):rs) pos =
-      let newPos = move pos (d,s)
-          changed = case pd of
-                      Nothing -> False
-                      Just x  -> x /= d
-          crosses = if changed then [pos] else []
+    go prevDir ((d,s):rs) currentPos =
+      let newPos   = move currentPos (d,s)
+          changed  = case prevDir of
+                       Nothing  -> False
+                       Just dir -> dir /= d   -- porovnání písmen směrů
+          crosses  = if changed then [currentPos] else []
       in crosses ++ go (Just d) rs newPos
+    -- endPos se dopočítá poskládáním všech kroků
     endPos = foldl move start moves
-  in start : go Nothing moves start ++ [endPos]
+  in  -- Vracíme: start, případné křižovatky, a nakonec endPos.
+      start : go Nothing moves start ++ [endPos]
 
+-- | makeMiniMap vezme z hlavního maze 3x3 oblast
+--   kolem (r,c) a do středu vloží tečku ('.'),
+--   aby byla vidět "křižovatka".
+makeMiniMap :: Maze -> (Int,Int) -> Maze
+makeMiniMap maze (r,c) =
+  let small3x3 = getPart maze (r-1,c-1) (3,3)
+  in putIntoMaze small3x3 [(1,1,'.')]
+
+-- | combineMiniMaps slepí všechny miniMapy pod sebe,
+--   každou miniMapu "obrandlí" shora a zdola
+--   speciálním řádkem z '='.
+combineMiniMaps :: [Maze] -> Maze
+combineMiniMaps miniMaps =
+  let line = replicate 3 '='   -- např. "==="
+      wrapOne m = line : m ++ [line]
+  in concatMap wrapOne miniMaps
+
+-- | minimaps je hlavní funkce, co vezme Maze,
+--   startovní pozici, a seznam kroků,
+--   a vrátí spojenou mini-mapku pro všechny "křižovatky".
 minimaps :: Maze -> (Int, Int) -> [(Char, Int)] -> Maze
 minimaps maze start path =
-  combineMiniMaps (map (makeMiniMap maze) (collectPositions start path))
+  let positions = collectPositions start path
+      all3x3    = map (makeMiniMap maze) positions
+  in  combineMiniMaps all3x3
+
+-------------------------
+-- MAIN
+-------------------------
+main :: IO ()
+main = do
+    putStrLn "Original maze:"
+    printMaze sample4
+    
+    putStrLn "\nMaze above itself:"
+    printMaze (above sample4 sample4)
+    
+    putStrLn "\nMaze side by side with itself:"
+    printMaze (sideBySide sample4 sample4)
+    
+    putStrLn "\nMaze rotated to the right:"
+    printMaze (rotateR sample4)
+    
+    putStrLn "\nMaze rotated to the left:"
+    printMaze (rotateL sample4)
+    
+    putStrLn "\nCharacter at position (1,1):"
+    print $ getFromMaze sample4 (1,1)
+    
+    putStrLn "\nMaze after putting characters:"
+    let modifiedMaze = putIntoMaze sample4 [(0,0,'1'),(6,6,'2'),(0,6,'3')]
+    printMaze modifiedMaze
+    
+    putStrLn "\nPart of the maze from (1,1) with size (4,4):"
+    let partOfMaze = getPart sample4 (1,1) (4,4)
+    printMaze partOfMaze
+    
+    putStrLn "\nSolving the maze with BFS..."
+    let solution = solveMaze sample4
+    if solution /= -1
+        then putStrLn $ "Maze solved! Distance to exit: " ++ show solution
+        else putStrLn "No solution found for the maze!"
+
+
+    let myPath = [('d',2), ('r',2), ('u',1), ('r',2), ('d',1), ('r',2)]
+    
+    putStrLn "\nGenerování minimaps z cesty (myPath):"
+    let startPos = (1,1)
+    let miniResult = minimaps sample4 startPos myPath
+    printMaze miniResult
