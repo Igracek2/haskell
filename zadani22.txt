@@ -1,0 +1,36 @@
+findPath :: Maze -> (Int, Int) -> (Int, Int) -> Maybe [(Int, Int)]
+findPath maze start goal =
+    bfsPath [(start, [start])] [start]
+  where
+    bfsPath [] _ = Nothing
+    bfsPath ((pos@(r,c), path):queue) visited
+      | pos == goal = Just path
+      | otherwise   =
+          let neighbors = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+              validN    = [ n | n <- neighbors, isValidCoord maze visited n ]
+              newVis    = visited ++ validN
+              newQueue  = queue ++ [(n, path ++ [n]) | n <- validN]
+          in bfsPath newQueue newVis
+
+    isValidCoord :: Maze -> [(Int,Int)] -> (Int,Int) -> Bool
+    isValidCoord mz visited (rr,cc) =
+      inRange rr (length mz) &&
+      inRange cc (length (head mz)) &&
+      (rr, cc) `notElem` visited &&
+      getFromMaze mz (rr, cc) /= '*'
+
+makePath :: Maze -> (Int, Int) -> (Int, Int) -> Maze
+makePath maze start end =
+    case findPath maze start end of
+      Nothing    -> maze
+      Just path  -> putPathNumbers maze path
+
+putPathNumbers :: Maze -> [(Int, Int)] -> Maze
+putPathNumbers maze coords =
+  let indexedCoords = zip [1..] coords
+      updates = map (\(i, (r,c)) -> (r, c, head (show i))) indexedCoords
+  in putIntoMaze maze updates
+
+
+
+
