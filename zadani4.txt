@@ -1,7 +1,165 @@
-inRange :: Maze -> (Int,Int) -> Bool
-inRange maze (r,c) =
-  r >= 0 && c >= 0 && r < length maze && c < length (head maze)
+{-# OPTIONS_GHC -Wno-overlapping-patterns #-}
+module SimpleMaze where
 
+import Data.Char (intToDigit)
+
+-------------------------
+-- TYPE AND PRINT
+-------------------------
+type Maze = [String]
+
+printMaze :: Maze -> IO ()
+printMaze x = putStr (unlines x)
+
+sample4 :: Maze
+sample4 = ["*********",
+           "*s*   *e*",
+           "* *   * *",
+           "* *   * *",
+           "*       *",
+           "******* *",
+           "        *",
+           "*********"]
+
+-------------------------
+-- 1) ABOVE
+-------------------------
+above :: Maze -> Maze -> Maze
+above m1 m2 = m1 ++ m2
+
+-------------------------
+-- 2) SIDE BY SIDE
+-------------------------
+sideBySide :: Maze -> Maze -> Maze
+sideBySide []         []         = []
+sideBySide (row1:xs1) (row2:xs2) = (row1 ++ row2) : sideBySide xs1 xs2
+sideBySide x          []         = x
+sideBySide []         y          = y
+
+-------------------------
+-- 3) ROTATIONS
+-------------------------
+take' :: Int -> [a] -> [a]
+take' 0 _      = []
+take' _ []     = []
+take' n (x:xs) = x : take' (n-1) xs
+
+drop' :: Int -> [a] -> [a]
+drop' 0 xs     = xs
+drop' _ []     = []
+drop' n (_:xs) = drop' (n-1) xs
+
+transpose :: Maze -> Maze
+transpose []     = []
+transpose ([]:_) = []
+transpose rows   =
+  let heads = map head rows
+      tails = map tail rows
+  in heads : transpose tails
+
+rotateR :: Maze -> Maze
+rotateR m = transpose (reverse m)
+
+rotateL :: Maze -> Maze
+rotateL m = reverse (transpose m)
+
+-------------------------
+-- 4) GET FROM MAZE
+-------------------------
+getFromMaze :: Maze -> (Int, Int) -> Char
+getFromMaze maze (r, c) = (maze !! r) !! c
+
+-------------------------
+-- 5) PUT INTO MAZE
+-------------------------
+-- Pozor, tady už je funkce replaceChar pro řetězce.
+-- Pro práci s minami použijeme jinou funkci, aby nebyl konflikt názvů.
+replaceChar :: String -> Int -> Char -> String
+replaceChar []     _ _  = []
+replaceChar (x:xs) 0 ch = ch : xs
+replaceChar (x:xs) n ch = x : replaceChar xs (n-1) ch
+
+putIntoMaze :: Maze -> [(Int, Int, Char)] -> Maze
+putIntoMaze maze [] = maze
+putIntoMaze maze ((row, col, ch):rest) =
+    let newMaze = putOne maze row col ch
+    in putIntoMaze newMaze rest
+
+putOne :: Maze -> Int -> Int -> Char -> Maze
+putOne (r:rs) 0 col ch = replaceChar r col ch : rs
+putOne (r:rs) n col ch = r : putOne rs (n-1) col ch
+putOne []     _ _   _  = []
+
+-------------------------
+-- 6) GET PART
+-------------------------
+getPart :: Maze -> (Int, Int) -> (Int, Int) -> Maze
+getPart maze (startR, startC) (h, w) =
+  let slicedRows = take' h (drop' startR maze)
+  in map (\row -> take' w (drop' startC row)) slicedRows
+
+-------------------------
+-- 7) SOLVE MAZE (BFS)
+-------------------------
+solveMaze :: Maze -> Int
+solveMaze maze =
+  let sPos    = findStart maze
+      initial = [(fst sPos, snd sPos, 0)] -- (r, c, distance=0)
+  in bfs maze initial [(fst sPos, snd sPos)]  -- visited
+
+findStart :: Maze -> (Int, Int)
+findStart maze = findHelper maze 0
+  where
+    findHelper []     _    = error "No 's' in maze!"
+    findHelper (r:rs) row =
+      case elemIndex 's' r of
+        Just col -> (row, col)
+        Nothing  -> findHelper rs (row+1)
+
+elemIndex :: Char -> String -> Maybe Int
+elemIndex _ []     = Nothing
+elemIndex ch (x:xs)
+  | ch == x  = Just 0
+  | otherwise = case elemIndex ch xs of
+      Just i  -> Just (i+1)
+      Nothing -> Nothing
+
+bfs :: Maze -> [(Int,Int,Int)] -> [(Int,Int)] -> Int
+bfs _    []                  _       = -1
+bfs maze ((r,c,d):rest) visited =
+  let ch = getFromMaze maze (r,c)
+  in if ch == 'e'
+     then d
+     else
+       let neighbors  = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+           validN     = filter (isValid maze visited) neighbors
+           newQueue   = rest ++ [(nr,nc,d+1) | (nr,nc) <- validN]
+           newVisited = visited ++ validN
+       in bfs maze newQueue newVisited
+
+isValid :: Maze -> [(Int,Int)] -> (Int,Int) -> Bool
+isValid maze visited (rr,cc) =
+    inRange rr (length maze) &&
+    inRange cc (length (head maze)) &&
+    notElem (rr,cc) visited &&
+    let ch = getFromMaze maze (rr,cc)
+    in ch /= '*'
+
+inRange :: Int -> Int -> Bool
+inRange i maxVal = (i >= 0) && (i < maxVal)
+
+------------------------------------
+-- FUNKCE PRO POČÍTÁNÍ MIN OKOLO POLÍČKA
+------------------------------------
+
+-- 1) Zjistíme, zda je zadaná souřadnice v bludišti 
+inRangeForMines :: Maze -> (Int,Int) -> Bool
+inRangeForMines maze (r,c) =
+  r >= 0 && c >= 0 &&
+  r < length maze &&
+  c < length (head maze)
+
+-- 2) Spočítáme, kolik je v okolí (v 8 sousedech) min ('*')
 countMinesAround :: Maze -> (Int,Int) -> Int
 countMinesAround maze (r,c) =
   length
@@ -9,21 +167,82 @@ countMinesAround maze (r,c) =
     | nr <- [r-1 .. r+1]
     , nc <- [c-1 .. c+1]
     , (nr,nc) /= (r,c)
-    , inRange maze (nr,nc)
+    , inRangeForMines maze (nr,nc)
     , getFromMaze maze (nr,nc) == '*'
     ]
 
-replaceChar :: Maze -> (Int,Int) -> Char
-replaceChar maze (r,c) =
+-- 3) Pokud je znak volné pole (typicky '.' nebo ' '), nahradíme ho číslicí (počet min okolo)
+--    Jinak ponecháme původní znak (mine, wall, apod.).
+replaceIfEmpty :: Maze -> (Int,Int) -> Char
+replaceIfEmpty maze (r,c) =
   let ch = getFromMaze maze (r,c)
   in case ch of
-       ' ' -> intToDigit (countMinesAround maze (r,c))
+       -- Zde si přizpůsobte podle toho, jak ve svém zadání označujete volné pole:
+       -- pokud máte volné pole jako ' ', tak pište:  case ch of ' ' -> ...
+       -- pokud máte volné pole jako '.', pište:       case ch of '.' -> ...
+       '.' -> intToDigit (countMinesAround maze (r,c))
        _   -> ch
 
+-- 4) Projedeme celé bludiště a podle potřeby nahradíme znak (jen pro volná pole)
 minesInMaze :: Maze -> Maze
-minesInMaze old =
-  [ [ replaceChar old (r,c)
-    | c <- [0..length (head old)-1]
+minesInMaze oldMaze =
+  [ [ replaceIfEmpty oldMaze (r,c)
+    | c <- [0 .. length (head oldMaze) - 1]
     ]
-  | r <- [0..length old-1]
+  | r <- [0 .. length oldMaze - 1]
   ]
+
+-------------------------
+-- PŘÍKLAD VLASTNÍHO MAZE S MINAMI
+-------------------------
+-- Tohle je jen ukázka, jak by mohlo vypadat Maze s minami:
+mineMaze :: Maze
+mineMaze = 
+  [ "#######"
+  , "#..*..#"
+  , "#...#.#"
+  , "#.*..#."
+  , "###..##"
+  ]
+
+main :: IO ()
+main = do
+    putStrLn "Original maze (sample4):"
+    printMaze sample4
+    
+    putStrLn "\nMaze above itself:"
+    printMaze (above sample4 sample4)
+    
+    putStrLn "\nMaze side by side with itself:"
+    printMaze (sideBySide sample4 sample4)
+    
+    putStrLn "\nMaze rotated to the right:"
+    printMaze (rotateR sample4)
+    
+    putStrLn "\nMaze rotated to the left:"
+    printMaze (rotateL sample4)
+    
+    putStrLn "\nCharacter at position (1,1) in sample4:"
+    print (getFromMaze sample4 (1,1))
+    
+    putStrLn "\nMaze after putting characters in sample4:"
+    let modifiedMaze = putIntoMaze sample4 [(0,0,'1'), (6,6,'2'), (0,6,'3')]
+    printMaze modifiedMaze
+    
+    putStrLn "\nPart of the maze from (1,1) with size (4,4):"
+    let partOfMaze = getPart sample4 (1,1) (4,4)
+    printMaze partOfMaze
+    
+    putStrLn "\nSolving the sample4 maze via BFS..."
+    let solution = solveMaze sample4
+    if solution /= -1
+        then putStrLn $ "Maze solved! Distance to exit: " ++ show solution
+        else putStrLn "No solution found for the maze!"
+
+    putStrLn "\n-----------------------------------"
+    putStrLn "Now demonstrating minesInMaze on a custom mineMaze:"
+    putStrLn "Original mineMaze:"
+    printMaze mineMaze
+    
+    putStrLn "\nmineMaze after counting mines around free fields:"
+    printMaze (minesInMaze mineMaze)
