@@ -150,8 +150,6 @@ inRange i maxVal = (i >= 0) && (i < maxVal)
 -- 8) NOVÉ FUNKCE PRO MINIMAPS
 -------------------------
 
--- | move posune (row, col) o "steps" podle směru d
---   'd' = dolů, 'u' = nahoru, 'l' = doleva, 'r' = doprava
 move :: (Int, Int) -> (Char, Int) -> (Int, Int)
 move (r,c) (d,steps) =
   case d of
@@ -161,9 +159,6 @@ move (r,c) (d,steps) =
     'r' -> (r, c + steps)
     _   -> (r,c)
 
--- | collectPositions vezme start a seznam kroků
---   a vrátí všechny pozice, kde došlo ke změně směru,
---   plus první (start) a poslední (end) pozici.
 collectPositions :: (Int,Int) -> [(Char,Int)] -> [(Int,Int)]
 collectPositions start moves =
   let
@@ -180,26 +175,19 @@ collectPositions start moves =
   in  -- Vracíme: start, případné křižovatky, a nakonec endPos.
       start : go Nothing moves start ++ [endPos]
 
--- | makeMiniMap vezme z hlavního maze 3x3 oblast
---   kolem (r,c) a do středu vloží tečku ('.'),
---   aby byla vidět "křižovatka".
 makeMiniMap :: Maze -> (Int,Int) -> Maze
 makeMiniMap maze (r,c) =
   let small3x3 = getPart maze (r-1,c-1) (3,3)
   in putIntoMaze small3x3 [(1,1,'.')]
 
--- | combineMiniMaps slepí všechny miniMapy pod sebe,
---   každou miniMapu "obrandlí" shora a zdola
---   speciálním řádkem z '='.
+
 combineMiniMaps :: [Maze] -> Maze
 combineMiniMaps miniMaps =
   let line = replicate 3 '='   -- např. "==="
       wrapOne m = line : m ++ [line]
   in concatMap wrapOne miniMaps
 
--- | minimaps je hlavní funkce, co vezme Maze,
---   startovní pozici, a seznam kroků,
---   a vrátí spojenou mini-mapku pro všechny "křižovatky".
+
 minimaps :: Maze -> (Int, Int) -> [(Char, Int)] -> Maze
 minimaps maze start path =
   let positions = collectPositions start path
