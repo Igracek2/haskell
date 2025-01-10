@@ -1,0 +1,76 @@
+directions :: [(Char,(Int,Int))]
+directions = [
+    ('u',(-1,0)),
+    ('d',( 1,0)),
+    ('l',( 0,-1)),
+    ('r',( 0, 1))
+  ]
+
+bfsPath :: Maze -> [((Int,Int), [Char])] -> [(Int,Int)] -> Maybe [Char]
+bfsPath _    []               _       = Nothing
+bfsPath maze (((r,c),path):queue) visited =
+  let ch = getFromMaze maze (r,c)
+  in if ch == 'e'
+     then Just path
+     else
+       let nextSteps = concatMap
+             (\(dir,(dr,dc)) ->
+                let nr = r + dr
+                    nc = c + dc
+                in if isValid maze visited (nr,nc)
+                   then [((nr,nc), path ++ [dir])]
+                   else [])
+             directions
+           newVisited = visited ++ map fst nextSteps
+           newQueue   = queue ++ nextSteps
+       in bfsPath maze newQueue newVisited
+
+solveMazeWithPath :: Maze -> Maybe [Char]
+solveMazeWithPath maze =
+  let sPos = findStart maze
+  in bfsPath maze [(sPos, [])] [sPos]
+
+replaceCharInRow :: String -> Int -> Char -> String
+replaceCharInRow row col ch = take col row ++ [ch] ++ drop (col+1) row
+
+putCharInMaze :: Maze -> (Int,Int) -> Char -> Maze
+putCharInMaze maze (r,c) ch =
+  take r maze
+  ++ [replaceCharInRow (maze !! r) c ch]
+  ++ drop (r+1) maze
+
+stepMove :: (Int,Int) -> Char -> (Int,Int)
+stepMove (r,c) d =
+  case d of
+    'u' -> (r-1, c)
+    'd' -> (r+1, c)
+    'l' -> (r, c-1)
+    'r' -> (r, c+1)
+    _   -> (r,c)
+
+markPath :: Maze -> (Int,Int) -> [Char] -> Maze
+markPath maze start path =
+  let
+    go m _   []     = m
+    go m pos (d:ds) =
+      let newPos = stepMove pos d
+          m2     = putCharInMaze m newPos '+'
+      in go m2 newPos ds
+    mStart = putCharInMaze maze start '+'
+  in go mStart start path 
+
+
+
+
+
+
+
+putStrLn "\nSolving the maze and marking the path..."
+case solveMazeWithPath sample4 of
+  Nothing   -> putStrLn "Nenalezeno"
+  Just path -> do
+    putStrLn $ "Cesta: " ++ show path
+    let sPos = findStart sample4
+        mazeWithPath = markPath sample4 sPos path
+    putStrLn "cesta '+':"
+    printMaze mazeWithPath
