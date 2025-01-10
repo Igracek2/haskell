@@ -1,0 +1,44 @@
+solveAll :: Maze -> (Int, Int) -> Maze
+solveAll maze (sr, sc) =
+  let allDistances = bfsAll maze (sr, sc)
+      newMaze      = putDistances maze allDistances
+  in newMaze
+
+bfsAll :: Maze -> (Int, Int) -> [(Int, Int, Int)]
+bfsAll maze (startR, startC) =
+  let initialQueue = [(startR, startC, 0)]
+      visited      = [(startR, startC)]
+  in bfsAllLoop maze initialQueue visited []
+
+bfsAllLoop :: Maze 
+           -> [(Int, Int, Int)] 
+           -> [(Int, Int)]      
+           -> [(Int, Int, Int)] 
+           -> [(Int, Int, Int)]
+bfsAllLoop _    []            _        results = results
+bfsAllLoop maze ((r,c,d):qs) visited results =
+    let newResults = results ++ [(r,c,d)]
+        neighbors  = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+        validN     = filter (isValid maze visited) neighbors
+        newQueue   = qs ++ [(nr,nc,d+1) | (nr,nc) <- validN]
+        newVisited = visited ++ validN
+    in bfsAllLoop maze newQueue newVisited newResults
+
+putDistances :: Maze -> [(Int, Int, Int)] -> Maze
+putDistances maze [] = maze
+putDistances maze ((r,c,d):rest) =
+  let oldChar = getFromMaze maze (r,c)
+      newMaze =
+        if oldChar == ' '
+          then putOne maze r c (distanceToChar d)
+          else maze
+  in putDistances newMaze rest
+
+distanceToChar :: Int -> Char
+distanceToChar d =
+  let digit = d `mod` 10
+  in head (show digit)
+
+putStrLn "\n--- solveAll: BFS do všech volných polí ---"
+let solvedMaze = solveAll sample4 (1,1)
+printMaze solvedMaze
