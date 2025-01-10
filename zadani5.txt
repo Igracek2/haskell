@@ -1,38 +1,248 @@
-inRange :: Maze -> (Int,Int) -> Bool
-inRange maze (r,c) =
-  r >= 0 && c >= 0 && r < length maze && c < length (head maze)
+module SimpleMaze where
 
-replaceCharInRow :: String -> Int -> Char -> String
-replaceCharInRow row col ch = take col row ++ [ch] ++ drop (col+1) row
+-------------------------
+-- TYPE AND PRINT
+-------------------------
+type Maze = [String]
 
-putCharInMaze :: Maze -> (Int,Int) -> Char -> Maze
-putCharInMaze maze (r,c) ch =
-  take r maze ++ [replaceCharInRow (maze !! r) c ch] ++ drop (r+1) maze
+printMaze :: Maze -> IO ()
+printMaze x = putStr (concat (map (++"\n") x))
 
-neighbors :: (Int,Int) -> [(Int,Int)]
-neighbors (r,c) = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+sample4 :: Maze
+sample4 = ["*********",
+           "*s*   *e*",
+           "* *   * *",
+           "* *   * *",
+           "*       *",
+           "******* *",
+           "        *",
+           "*********"]
 
-bfsDistances :: Maze -> (Int,Int) -> [((Int,Int), Int)]
-bfsDistances maze start =
-  let
-    go queue visited acc =
-      case S.viewl queue of
-        S.EmptyL -> acc
-        ((pos,dist) S.:< rest) ->
-          let ns = [n | n <- neighbors pos, inRange maze n, getFromMaze maze n == ' ', not (n `Set.member` visited)]
-              visited' = foldr Set.insert visited ns
-              rest' = foldl' (\q x -> q S.|> (x,dist+1)) rest ns
-              acc' = ((pos,dist):acc)
-          in go rest' visited' acc'
-  in go (S.singleton (start,0)) (Set.singleton start) []
+-------------------------
+-- 1) ABOVE
+-------------------------
+above :: Maze -> Maze -> Maze
+above m1 m2 = m1 ++ m2
 
-solveAll :: Maze -> (Int,Int) -> Maze
-solveAll maze start =
-  let distPairs = bfsDistances maze start
-      fill m [] = m
-      fill m (((r,c),d):xs) =
-        let ch = intToDigit (d `mod` 10)
-            m' = putCharInMaze m (r,c) ch
-        in fill m' xs
-      m2 = fill maze distPairs
-  in putCharInMaze m2 start '0'
+-------------------------
+-- 2) SIDE BY SIDE
+-------------------------
+sideBySide :: Maze -> Maze -> Maze
+sideBySide []         []         = []
+sideBySide (row1:xs1) (row2:xs2) = (row1 ++ row2) : sideBySide xs1 xs2
+sideBySide x          []         = x
+sideBySide []         y          = y
+
+-------------------------
+-- 3) ROTATIONS
+-------------------------
+take' :: Int -> [a] -> [a]
+take' 0 _      = []
+take' _ []     = []
+take' n (x:xs) = x : take' (n-1) xs
+
+drop' :: Int -> [a] -> [a]
+drop' 0 xs     = xs
+drop' _ []     = []
+drop' n (_:xs) = drop' (n-1) xs
+
+transpose :: Maze -> Maze
+transpose []     = []
+transpose ([]:_) = []
+transpose rows   =
+  let heads = map head rows
+      tails = map tail rows
+  in heads : transpose tails
+
+rotateR :: Maze -> Maze
+rotateR m = transpose (reverse m)
+
+rotateL :: Maze -> Maze
+rotateL m = reverse (transpose m)
+
+-------------------------
+-- 4) GET FROM MAZE
+-------------------------
+getFromMaze :: Maze -> (Int, Int) -> Char
+getFromMaze maze (r, c) = (maze !! r) !! c
+
+-------------------------
+-- 5) PUT INTO MAZE
+-------------------------
+replaceChar :: String -> Int -> Char -> String
+replaceChar []     _ _  = []
+replaceChar (x:xs) 0 ch = ch : xs
+replaceChar (x:xs) n ch = x : replaceChar xs (n-1) ch
+
+putIntoMaze :: Maze -> [(Int, Int, Char)] -> Maze
+putIntoMaze maze [] = maze
+putIntoMaze maze ((row, col, ch):rest) =
+    let newMaze = putOne maze row col ch
+    in putIntoMaze newMaze rest
+
+putOne :: Maze -> Int -> Int -> Char -> Maze
+putOne (r:rs) 0 col ch = replaceChar r col ch : rs
+putOne (r:rs) n col ch = r : putOne rs (n-1) col ch
+putOne []     _ _   _  = []
+
+-------------------------
+-- 6) GET PART
+-------------------------
+getPart :: Maze -> (Int, Int) -> (Int, Int) -> Maze
+getPart maze (startR, startC) (h, w) =
+  let slicedRows = take' h (drop' startR maze)
+  in map (\row -> take' w (drop' startC row)) slicedRows
+
+-------------------------
+-- 7) SOLVE MAZE (BFS for single exit)
+-------------------------
+solveMaze :: Maze -> Int
+solveMaze maze =
+  let sPos    = findStart maze
+      initial = [(fst sPos, snd sPos, 0)] -- (r, c, distance=0)
+  in bfs maze initial [(fst sPos, snd sPos)]  -- visited
+
+findStart :: Maze -> (Int, Int)
+findStart maze = findHelper maze 0
+  where
+    findHelper []     _    = error "No 's' in maze!"
+    findHelper (r:rs) row =
+      case elemIndex 's' r of
+        Just col -> (row, col)
+        Nothing  -> findHelper rs (row+1)
+
+-- Jednoduchá implementace elemIndex, aby fungovala i bez Data.List
+elemIndex :: Char -> String -> Maybe Int
+elemIndex _ []     = Nothing
+elemIndex ch (x:xs)
+  | ch == x  = Just 0
+  | otherwise = case elemIndex ch xs of
+      Just i  -> Just (i+1)
+      Nothing -> Nothing
+
+-- BFS pro hledání jedné cesty k 'e'
+bfs :: Maze -> [(Int,Int,Int)] -> [(Int,Int)] -> Int
+bfs _    []                  _       = -1
+bfs maze ((r,c,d):rest) visited =
+  let ch = getFromMaze maze (r,c)
+  in if ch == 'e'
+     then d
+     else
+       let neighbors  = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+           validN     = filter (isValid maze visited) neighbors
+           newQueue   = rest ++ [(nr,nc,d+1) | (nr,nc) <- validN]
+           newVisited = visited ++ validN
+       in bfs maze newQueue newVisited
+
+-------------------------
+-- Pomocné funkce
+-------------------------
+isValid :: Maze -> [(Int,Int)] -> (Int,Int) -> Bool
+isValid maze visited (rr,cc) =
+    inRange rr (length maze) &&
+    inRange cc (length (head maze)) &&
+    notElem (rr,cc) visited &&
+    let ch = getFromMaze maze (rr,cc)
+    in ch /= '*'
+
+inRange :: Int -> Int -> Bool
+inRange i maxVal = (i >= 0) && (i < maxVal)
+
+-------------------------
+-- 8) SOLVE ALL (BFS pro všechna volná pole)
+-------------------------
+-- Tato funkce projde celé bludiště od dané startovní pozice (sr, sc)
+-- a spočítá vzdálenost do každého volného pole. Tam potom vloží
+-- (v podobě jedné číslice) vzdálenost mod 10.
+-------------------------
+
+solveAll :: Maze -> (Int, Int) -> Maze
+solveAll maze (sr, sc) =
+  let allDistances = bfsAll maze (sr, sc)  -- získáme vzdálenost ke všem volným buňkám
+      newMaze      = putDistances maze allDistances
+  in newMaze
+
+-- BFS, který neskončí u 'e', ale projde všechny dosažitelné buňky.
+-- Vrátí seznam (row, col, distance) pro každou volnou buňku.
+bfsAll :: Maze -> (Int, Int) -> [(Int, Int, Int)]
+bfsAll maze (startR, startC) =
+  let initialQueue = [(startR, startC, 0)]
+      visited      = [(startR, startC)]
+  in bfsAllLoop maze initialQueue visited []
+
+bfsAllLoop :: Maze 
+           -> [(Int, Int, Int)] -- ^ fronta (r, c, distance)
+           -> [(Int, Int)]      -- ^ navštívené souřadnice
+           -> [(Int, Int, Int)] -- ^ výsledky (r, c, distance)
+           -> [(Int, Int, Int)]
+bfsAllLoop _    []            _        results = results
+bfsAllLoop maze ((r,c,d):qs) visited results =
+    let newResults = results ++ [(r,c,d)]
+        neighbors  = [(r-1,c),(r+1,c),(r,c-1),(r,c+1)]
+        validN     = filter (isValid maze visited) neighbors
+        newQueue   = qs ++ [(nr,nc,d+1) | (nr,nc) <- validN]
+        newVisited = visited ++ validN
+    in bfsAllLoop maze newQueue newVisited newResults
+
+-- Vloží do bludiště pro všechny volné buňky jejich vzdálenost, 
+-- vypsanou jako poslední číslici (distance mod 10).
+putDistances :: Maze -> [(Int, Int, Int)] -> Maze
+putDistances maze [] = maze
+putDistances maze ((r,c,d):rest) =
+  let oldChar = getFromMaze maze (r,c)
+      -- Pokud je starý znak ' ' (volné pole), nahradíme ho číslicí.
+      -- Pokud byste chtěli přepisovat i 's' nebo 'e', upravte podmínku.
+      newMaze =
+        if oldChar == ' '
+          then putOne maze r c (distanceToChar d)
+          else maze
+  in putDistances newMaze rest
+
+-- Pomocná funkce pro převedení čísla na poslední cifru (0..9)
+distanceToChar :: Int -> Char
+distanceToChar d =
+  let digit = d `mod` 10
+  in head (show digit)
+
+-------------------------
+-- MAIN
+-------------------------
+main :: IO ()
+main = do
+    putStrLn "Original maze:"
+    printMaze sample4
+    
+    putStrLn "\nMaze above itself:"
+    printMaze (above sample4 sample4)
+    
+    putStrLn "\nMaze side by side with itself:"
+    printMaze (sideBySide sample4 sample4)
+    
+    putStrLn "\nMaze rotated to the right:"
+    printMaze (rotateR sample4)
+    
+    putStrLn "\nMaze rotated to the left:"
+    printMaze (rotateL sample4)
+    
+    putStrLn "\nCharacter at position (1,1):"
+    print $ getFromMaze sample4 (1,1)
+    
+    putStrLn "\nMaze after putting characters:"
+    let modifiedMaze = putIntoMaze sample4 [(0,0,'1'),(6,6,'2'),(0,6,'3')]
+    printMaze modifiedMaze
+    
+    putStrLn "\nPart of the maze from (1,1) with size (4,4):"
+    let partOfMaze = getPart sample4 (1,1) (4,4)
+    printMaze partOfMaze
+    
+    putStrLn "\nSolving the maze (single path to 'e'):"
+    let solution = solveMaze sample4
+    if solution /= -1
+        then putStrLn $ "Maze solved! Distance to exit: " ++ show solution
+        else putStrLn "No solution found for the maze!"
+    
+    putStrLn "\n--- solveAll: BFS do všech volných polí ---"
+    -- Zde nastavte startovní pozici na řádek 1, sloupec 1
+    -- nebo na jinou souřadnici, kde je volné pole.
+    let solvedMaze = solveAll sample4 (1,1)
+    printMaze solvedMaze
